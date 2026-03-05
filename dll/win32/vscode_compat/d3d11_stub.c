@@ -17,13 +17,26 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <d3d11.h>
-#include <dxgi.h>
+#include <winerror.h>
 
 #define WINE_DEFAULT_DEBUG_CHANNEL(d3d11_stub)
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d11_stub);
+
+/* Minimal local types so this module builds without full D3D11 headers. */
+typedef void IDXGIAdapter;
+typedef void ID3D11Device;
+typedef void ID3D11DeviceContext;
+typedef void IDXGISwapChain;
+typedef UINT D3D_DRIVER_TYPE;
+typedef UINT D3D_FEATURE_LEVEL;
+typedef struct _DXGI_SWAP_CHAIN_DESC
+{
+    UINT Dummy;
+} DXGI_SWAP_CHAIN_DESC;
+
+#define D3D_FEATURE_LEVEL_9_1 ((D3D_FEATURE_LEVEL)0x9100)
 
 /*
  * @implemented (stub)

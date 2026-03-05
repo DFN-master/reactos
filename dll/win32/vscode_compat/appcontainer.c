@@ -18,10 +18,17 @@
 #include <winuser.h>
 #include <appmodel.h>
 
-#define WINE_DEFAULT_DEBUG_CHANNEL(vscode_compat)
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(vscode_compat);
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    UNREFERENCED_PARAMETER(hinstDLL);
+    UNREFERENCED_PARAMETER(fdwReason);
+    UNREFERENCED_PARAMETER(lpvReserved);
+    return TRUE;
+}
 
 /*
  * @implemented (stub)
@@ -35,8 +42,8 @@ GetCurrentPackageId(
     _Inout_ UINT32 *bufferLength,
     _Out_opt_ BYTE *buffer)
 {
-    DPRINT("GetCurrentPackageId(bufferLength=%p, buffer=%p) - STUB (Not packaged)\n",
-           bufferLength, buffer);
+        TRACE("GetCurrentPackageId(bufferLength=%p, buffer=%p) - STUB (Not packaged)\n",
+            bufferLength, buffer);
 
     if (!bufferLength)
     {
@@ -59,7 +66,7 @@ GetCurrentPackageFullName(
     _Inout_ UINT32 *packageFullNameLength,
     _Out_opt_ PWSTR packageFullName)
 {
-    DPRINT("GetCurrentPackageFullName() - STUB (Not packaged)\n");
+    TRACE("GetCurrentPackageFullName() - STUB (Not packaged)\n");
 
     if (!packageFullNameLength)
     {
@@ -79,7 +86,7 @@ GetCurrentPackageFamilyName(
     _Inout_ UINT32 *packageFamilyNameLength,
     _Out_opt_ PWSTR packageFamilyName)
 {
-    DPRINT("GetCurrentPackageFamilyName() - STUB (Not packaged)\n");
+    TRACE("GetCurrentPackageFamilyName() - STUB (Not packaged)\n");
 
     if (!packageFamilyNameLength)
     {
@@ -99,7 +106,7 @@ GetCurrentPackagePath(
     _Inout_ UINT32 *pathLength,
     _Out_opt_ PWSTR path)
 {
-    DPRINT("GetCurrentPackagePath() - STUB (Not packaged)\n");
+    TRACE("GetCurrentPackagePath() - STUB (Not packaged)\n");
 
     if (!pathLength)
     {
@@ -120,7 +127,7 @@ GetPackageId(
     _Inout_ UINT32 *bufferLength,
     _Out_opt_ BYTE *buffer)
 {
-    DPRINT("GetPackageId(hProcess=%p) - STUB (Not packaged)\n", hProcess);
+    TRACE("GetPackageId(hProcess=%p) - STUB (Not packaged)\n", hProcess);
 
     if (!bufferLength)
     {
@@ -141,7 +148,7 @@ GetPackageFullName(
     _Inout_ UINT32 *packageFullNameLength,
     _Out_opt_ PWSTR packageFullName)
 {
-    DPRINT("GetPackageFullName(hProcess=%p) - STUB (Not packaged)\n", hProcess);
+    TRACE("GetPackageFullName(hProcess=%p) - STUB (Not packaged)\n", hProcess);
 
     if (!packageFullNameLength)
     {
@@ -162,7 +169,7 @@ GetPackageFamilyName(
     _Inout_ UINT32 *packageFamilyNameLength,
     _Out_opt_ PWSTR packageFamilyName)
 {
-    DPRINT("GetPackageFamilyName(hProcess=%p) - STUB (Not packaged)\n", hProcess);
+    TRACE("GetPackageFamilyName(hProcess=%p) - STUB (Not packaged)\n", hProcess);
 
     if (!packageFamilyNameLength)
     {
@@ -183,7 +190,7 @@ GetApplicationUserModelId(
     _Inout_ UINT32 *applicationUserModelIdLength,
     _Out_opt_ PWSTR applicationUserModelId)
 {
-    DPRINT("GetApplicationUserModelId(hProcess=%p) - STUB\n", hProcess);
+    TRACE("GetApplicationUserModelId(hProcess=%p) - STUB\n", hProcess);
 
     if (!applicationUserModelIdLength)
     {
@@ -203,7 +210,7 @@ GetCurrentApplicationUserModelId(
     _Inout_ UINT32 *applicationUserModelIdLength,
     _Out_opt_ PWSTR applicationUserModelId)
 {
-    DPRINT("GetCurrentApplicationUserModelId() - STUB\n");
+    TRACE("GetCurrentApplicationUserModelId() - STUB\n");
 
     if (!applicationUserModelIdLength)
     {
@@ -224,7 +231,7 @@ WINAPI
 IsAppContainerProcess(
     _In_ HANDLE hProcess)
 {
-    DPRINT("IsAppContainerProcess(hProcess=%p) - STUB (Not sandboxed)\n", hProcess);
+    TRACE("IsAppContainerProcess(hProcess=%p) - STUB (Not sandboxed)\n", hProcess);
     return FALSE;
 }
 
@@ -239,7 +246,7 @@ PackageIdFromFullName(
     _Inout_ UINT32 *bufferLength,
     _Out_opt_ BYTE *buffer)
 {
-    DPRINT("PackageIdFromFullName('%S') - STUB\n", packageFullName);
+    TRACE("PackageIdFromFullName('%S') - STUB\n", packageFullName);
 
     if (!bufferLength)
     {
@@ -259,7 +266,7 @@ PackageFamilyNameFromFullName(
     _Inout_ UINT32 *packageFamilyNameLength,
     _Out_opt_ PWSTR packageFamilyName)
 {
-    DPRINT("PackageFamilyNameFromFullName('%S') - STUB\n", packageFullName);
+    TRACE("PackageFamilyNameFromFullName('%S') - STUB\n", packageFullName);
 
     if (!packageFamilyNameLength)
     {
@@ -279,7 +286,7 @@ PackageFullNameFromId(
     _Inout_ UINT32 *packageFullNameLength,
     _Out_opt_ PWSTR packageFullName)
 {
-    DPRINT("PackageFullNameFromId() - STUB\n");
+    TRACE("PackageFullNameFromId() - STUB\n");
 
     if (!packageFullNameLength)
     {

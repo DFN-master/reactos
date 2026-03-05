@@ -33,7 +33,7 @@ typedef struct _DRIVER_COMPAT_CONTEXT
 } DRIVER_COMPAT_CONTEXT, *PDRIVER_COMPAT_CONTEXT;
 
 /* Define the ID for compatibility context extension */
-static PVOID CompatShimDriverContextId = (PVOID)0xDEADBEEF;
+static UCHAR CompatShimDriverContextId;
 
 /*
  * IopDetectDriverVersion
@@ -76,7 +76,7 @@ IopInitializeCompatShim(
     /* Allocate compatibility context */
     Status = IoAllocateDriverObjectExtension(
         DriverObject,
-        CompatShimDriverContextId,
+        &CompatShimDriverContextId,
         sizeof(DRIVER_COMPAT_CONTEXT),
         (PVOID*)&CompatContext);
 
@@ -200,7 +200,7 @@ IopValidateIrpMajorFunction(
     /* Get compatibility context if exists */
     CompatContext = (PDRIVER_COMPAT_CONTEXT)
         IoGetDriverObjectExtension(DeviceObject->DriverObject,
-                                   CompatShimDriverContextId);
+                                   &CompatShimDriverContextId);
 
     if (!CompatContext || !(CompatContext->Flags & COMPAT_FLAG_LEGACY_API_COMPAT))
     {
@@ -208,7 +208,7 @@ IopValidateIrpMajorFunction(
     }
 
     /* Validate based on major function */
-    switch (Irp->Irp_MajorFunction)
+    switch (IoGetCurrentIrpStackLocation(Irp)->MajorFunction)
     {
         case IRP_MJ_CREATE:
             Status = IopValidateCreateFile(DeviceObject, Irp);
@@ -236,7 +236,7 @@ IopGetDriverCompatContext(
     _In_ PDRIVER_OBJECT DriverObject)
 {
     return (PDRIVER_COMPAT_CONTEXT)
-        IoGetDriverObjectExtension(DriverObject, CompatShimDriverContextId);
+        IoGetDriverObjectExtension(DriverObject, &CompatShimDriverContextId);
 }
 
 /*

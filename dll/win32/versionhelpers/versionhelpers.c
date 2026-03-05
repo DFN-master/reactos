@@ -18,10 +18,17 @@
 #include <winuser.h>
 #include <ndk/rtlfuncs.h>
 
-#define WINE_DEFAULT_DEBUG_CHANNEL(versionhelpers)
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(versionhelpers);
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    UNREFERENCED_PARAMETER(hinstDLL);
+    UNREFERENCED_PARAMETER(fdwReason);
+    UNREFERENCED_PARAMETER(lpvReserved);
+    return TRUE;
+}
 
 /* Internal helper to check OS version */
 static BOOL
@@ -31,8 +38,6 @@ IsWindowsVersionOrGreaterInternal(
     WORD wServicePackMajor)
 {
     RTL_OSVERSIONINFOEXW osvi;
-    ULONGLONG dwlConditionMask = 0;
-    OSVERSIONINFOEXW verInfo;
     NTSTATUS Status;
 
     ZeroMemory(&osvi, sizeof(RTL_OSVERSIONINFOEXW));
@@ -42,7 +47,7 @@ IsWindowsVersionOrGreaterInternal(
     Status = RtlGetVersion((PRTL_OSVERSIONINFOW)&osvi);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlGetVersion failed: 0x%08lx\n", Status);
+        ERR("RtlGetVersion failed: 0x%08lx\n", Status);
         return FALSE;
     }
 
@@ -77,9 +82,9 @@ IsWindowsVersionOrGreater(
 {
     BOOL Result = IsWindowsVersionOrGreaterInternal(wMajorVersion, wMinorVersion, wServicePackMajor);
     
-    DPRINT("IsWindowsVersionOrGreater(%u.%u.%u) = %s\n", 
-           wMajorVersion, wMinorVersion, wServicePackMajor,
-           Result ? "TRUE" : "FALSE");
+        TRACE("IsWindowsVersionOrGreater(%u.%u.%u) = %s\n",
+            wMajorVersion, wMinorVersion, wServicePackMajor,
+            Result ? "TRUE" : "FALSE");
     
     return Result;
 }
@@ -215,7 +220,7 @@ IsWindows10OrGreater(VOID)
     /* Windows 10 = 10.0 */
     BOOL Result = IsWindowsVersionOrGreaterInternal(10, 0, 0);
     
-    DPRINT("IsWindows10OrGreater() = %s\n", Result ? "TRUE" : "FALSE");
+    TRACE("IsWindows10OrGreater() = %s\n", Result ? "TRUE" : "FALSE");
     
     return Result;
 }
@@ -236,7 +241,7 @@ IsWindowsServer(VOID)
     Status = RtlGetVersion((PRTL_OSVERSIONINFOW)&osvi);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlGetVersion failed: 0x%08lx\n", Status);
+        ERR("RtlGetVersion failed: 0x%08lx\n", Status);
         return FALSE;
     }
 

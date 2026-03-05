@@ -10,6 +10,8 @@
 
 /* Function declarations for compatibility shims */
 
+typedef struct _DRIVER_COMPAT_CONTEXT DRIVER_COMPAT_CONTEXT, *PDRIVER_COMPAT_CONTEXT;
+
 NTSTATUS
 IopInitializeCompatShim(
     _In_ PDRIVER_OBJECT DriverObject);

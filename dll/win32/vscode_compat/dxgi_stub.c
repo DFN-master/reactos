@@ -15,12 +15,14 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <dxgi.h>
+#include <winerror.h>
 
 #define WINE_DEFAULT_DEBUG_CHANNEL(dxgi_stub)
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dxgi_stub);
+
+typedef const void *REFIID;
 
 /*
  * @implemented (stub)
