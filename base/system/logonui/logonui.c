@@ -19,13 +19,21 @@ PINFO g_pInfo = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
+/* Use Windows 7 Aero Glass design by default, set to 0 for classic NT5 style */
+#define USE_MODERN_DESIGN 1
+
 
 static HDC
 DrawBaseBackground(HDC hdcDesktop)
 {
     HDC hdcMem;
 
+    /* Use Windows 7 Aero Glass design for modern look, or classic NT5 for compatibility */
+#if USE_MODERN_DESIGN
+    hdcMem = NT6_DrawBaseBackground(hdcDesktop);
+#else
     hdcMem = NT5_DrawBaseBackground(hdcDesktop);
+#endif
 
     return hdcMem;
 }
@@ -33,8 +41,12 @@ DrawBaseBackground(HDC hdcDesktop)
 static VOID
 DrawLogoffScreen(HDC hdcMem)
 {
-    /* Draw the logoff icon */
+    /* Draw the logoff screen with selected design */
+#if USE_MODERN_DESIGN
+    NT6_CreateLogoffScreen(L"Saving your settings...", hdcMem);
+#else
     NT5_CreateLogoffScreen(L"Saving your settings...", hdcMem);
+#endif
 }
 
 #if 0
