@@ -48,6 +48,15 @@
 #include "isohybrid.h"
 #include "reactos_support_code.h"
 
+// Define uuid_t for Windows after reactos_support_code.h provides uint8_t
+#ifdef REACTOS_ISOHYBRID_EFI_MAC_SUPPORT
+    #ifdef _WIN32
+        // rpcdce.h defines uuid_t as UUID (GUID), we need to undefine it
+        #undef uuid_t
+        typedef uint8_t uuid_t[16];
+    #endif
+#endif
+
 char *prog = NULL;
 extern int opterr, optind;
 struct stat isostat;
