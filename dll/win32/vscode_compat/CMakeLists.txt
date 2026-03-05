@@ -5,7 +5,9 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 list(APPEND SOURCE
-    appcontainer.c)
+    appcontainer.c
+    gpu_stubs.c
+    process_stubs.c)
 
 add_library(vscode_compat MODULE
     ${SOURCE}
