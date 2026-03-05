@@ -200,3 +200,46 @@ BEGIN
 The computer will restart automatically when complete.", 
           IDC_STATIC, 40, 285, 420, 30, SS_LEFT | WS_GROUP
 END
+
+/* ===============================================
+   ADMINISTRATOR ACCOUNT PAGE
+   Create first administrator user
+   =============================================== */
+IDD_MODERN_ADMIN DIALOGEX 0, 0, 500, 350
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Administrator Account Setup"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    LTEXT "Create Administrator Account", IDC_ADMIN_TITLE, 
+          40, 30, 420, 40, SS_LEFT | WS_GROUP
+    
+    LTEXT "Create a user account for accessing ReactOS.\n\
+This account will have full administrative privileges.", IDC_ADMIN_DESCRIPTION,
+          40, 75, 420, 50, SS_LEFT | WS_GROUP
+    
+    /* Username field */
+    LTEXT "Username:", IDC_ADMIN_USERNAME_LBL, 40, 135, 100, 15, SS_LEFT | WS_GROUP
+    EDITTEXT IDC_ADMIN_USERNAME, 150, 133, 310, 20, ES_LEFT | ES_AUTOHSCROLL | WS_TABSTOP
+    LTEXT "Letters, numbers, underscore, and hyphen only", IDC_STATIC, 150, 155, 310, 15, SS_LEFT | WS_GROUP
+    
+    /* Password field */
+    LTEXT "Password:", IDC_ADMIN_PASSWORD_LBL, 40, 180, 100, 15, SS_LEFT | WS_GROUP
+    EDITTEXT IDC_ADMIN_PASSWORD, 150, 178, 310, 20, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_TABSTOP
+    LTEXT "Recommended: At least 8 characters", IDC_STATIC, 150, 200, 310, 15, SS_LEFT | WS_GROUP
+    
+    /* Password confirm field */
+    LTEXT "Confirm Password:", IDC_ADMIN_PASSWORD_CONFIRM_LBL, 40, 225, 100, 15, SS_LEFT | WS_GROUP
+    EDITTEXT IDC_ADMIN_PASSWORD_CONFIRM, 150, 223, 310, 20, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_TABSTOP
+    
+    /* Show password checkbox */
+    AUTOCHECKBOX "Show password", IDC_ADMIN_PASSWORD_SHOW, 150, 250, 150, 20, WS_TABSTOP
+    
+    /* Password strength indicator */
+    LTEXT "Password strength:", IDC_STATIC, 40, 275, 100, 15, SS_LEFT | WS_GROUP
+    CONTROL "", IDC_ADMIN_PASSWORD_STRENGTH, "msctls_progress32", PBS_SMOOTH, 150, 275, 310, 12
+    
+    /* Security note */
+    GROUPBOX "Security Note", IDC_STATIC, 40, 300, 420, 40
+    LTEXT "You can leave the password empty to skip login, but this is not recommended for security.", 
+          IDC_STATIC, 55, 315, 390, 20, SS_LEFT | WS_GROUP
+END

@@ -1,0 +1,267 @@
+/*
+ * ReactOS Setup - Administrator Account Integration
+ * Copyright (C) 2026 ReactOS Team
+ *
+ * Integration guide for administrator account creation during setup
+ */
+
+/*
+ * WIZARD PAGE SEQUENCE (Updated with Admin Account Page)
+ * =====================================================
+ * 
+ * Page 0: Welcome (WelcomePageProc)
+ *         - Welcome message
+ *         - Aero Glass enabled
+ *         - Introduction to ReactOS
+ * 
+ * Page 1: Installation Type (ExpressInstallPageProc)
+ *         - Express vs Custom installation
+ *         - Recommended settings
+ * 
+ * Page 2: Administrator Account (AdminAccountPageProc)  ← NEW PAGE
+ *         - Create admin username
+ *         - Set admin password
+ *         - Password validation
+ * 
+ * Page 3: Partition Selection (PartitionGraphPageProc)
+ *         - Choose installation drive
+ *         - Visual disk graph
+ *         - Create/Format partitions
+ * 
+ * Page 4: Installation Summary (SummaryPageProc)
+ *         - Review all settings
+ *         - Confirm before installation
+ * 
+ * Page 5: Installation Progress (ProgressPageProc)
+ *         - Copy files
+ *         - Install drivers
+ *         - Configure system
+ * 
+ * Page 6: Completion (CompletionPageProc)
+ *         - Installation finished
+ *         - Reboot options
+ */
+
+/*
+ * ADMINISTRATOR ACCOUNT PAGE FEATURES
+ * ===================================
+ * 
+ * Input Fields:
+ *   - Username: Default "Administrator", alphanumeric + underscore
+ *   - Password: Hidden with bullets (●), minimum 4 recommended 8 chars
+ *   - Confirm Password: Must match first password
+ *   - Show Password: Checkbox to reveal password during typing
+ * 
+ * Validation Rules:
+ *   - Username: Required, no special characters
+ *   - Password: Optional (empty allowed for test), 4-255 chars
+ *   - Passwords must match
+ *   - Feedback messages for invalid input
+ * 
+ * Security Features:
+ *   - Password strength indicator (progress bar)
+ *   - Hidden password display by default
+ *   - Password length requirements
+ *   - No password hints displayed
+ */
+
+/*
+ * IMPLEMENTATION CHECKLIST
+ * =======================
+ * 
+ * ✅ 1. Modern UI Components Created
+ *    - modern_setup.h (structures, colors, types)
+ *    - modern_ui.c (Aero Glass, fonts, drawing)
+ *    - modern_pages.c (wizard pages)
+ *    - modern_admin_page.c (admin account page)
+ * 
+ * ✅ 2. Resources Defined
+ *    - modern_resource.h (control IDs)
+ *    - modern_dialogs.rc (dialog templates)
+ *    - IDD_MODERN_ADMIN dialog created
+ * 
+ * ✅ 3. Build Configuration
+ *    - CMakeLists.txt updated
+ *    - modern_admin_page.c added to source list
+ *    - dwmapi, uxtheme, msimg32 linked
+ * 
+ * ⏳ 4. Integration with reactos.c (NEXT STEP)
+ *    - Add page to property sheet
+ *    - Pass context to all pages
+ *    - Handle PSWIZB_NEXT button state
+ * 
+ * ⏳ 5. User Account Registry Storage (NEXT)
+ *    - SAM registry key modifications
+ *    - User SID assignment
+ *    - Group membership setup
+ * 
+ * ⏳ 6. Testing
+ *    - Test on Windows 7 (Aero Glass)
+ *    - Test on Windows XP (gradient fallback)
+ *    - Verify password creation
+ *    - Test login after installation
+ */
+
+/*
+ * EXPECTED BEHAVIOR AFTER CHANGES
+ * ================================
+ * 
+ * During Installation:
+ * 1. User boots from bootcd.iso with modern installer
+ * 2. Welcome page displays with Aero Glass effects
+ * 3. User selects Express or Custom installation
+ * 4. NEW: Administrator Account Creation page appears
+ *    - User enters desired username (or accepts "Administrator")
+ *    - User enters password (8+ characters recommended)
+ *    - Confirms password matches
+ * 5. User selects partition/drive
+ * 6. User reviews summary
+ * 7. Installation proceeds with stored credentials
+ * 
+ * After First Boot:
+ * 1. ReactOS login screen appears
+ * 2. Username: Administrator (or custom name)
+ * 3. Password: As entered during setup
+ * 4. Desktop loads with user account active
+ * 5. Can create additional users from Control Panel
+ */
+
+/*
+ * PASSWORD SECURITY IMPLEMENTATION
+ * ================================
+ * 
+ * Current: Simple validation and storage placeholder
+ * 
+ * TODO: Production Hardening
+ * 
+ * 1. Password Hashing
+ *    - Use bcrypt.dll CryptHashData()
+ *    - SHA-256 based hashing
+ *    - Salt + iteration count
+ * 
+ * 2. Secure Memory
+ *    - Clear password from memory after hashing
+ *    - Use SecureZeroMemory()
+ *    - Prevent password display in dumps
+ * 
+ * 3. Registry Security
+ *    - Store hashed password in SAM hive
+ *    - Set ACL to SYSTEM only
+ *    - HKEY_LOCAL_MACHINE\SAM\SAM\Domains\Builtin\Users
+ * 
+ * 4. Account Flags
+ *    - USER_ACCOUNT_DISABLED: 0x0001
+ *    - USER_HOME_DIR_REQUIRED: 0x0002
+ *    - USER_PASSWORD_NOT_REQUIRED: 0x0004
+ *    - USER_TEMP_DUPLICATE_ACCOUNT: 0x0008
+ *    - Normal User: 0x0200
+ *    - Admin User: 0x0210
+ */
+
+/*
+ * TESTING GUIDE
+ * =============
+ * 
+ * Unit Tests for modern_admin_page.c:
+ * 
+ * 1. ValidateUsername()
+ *    Input: "Administrator" → Expected: TRUE
+ *    Input: "user123" → Expected: TRUE
+ *    Input: "user@domain" → Expected: FALSE (@ not allowed)
+ *    Input: "" → Expected: FALSE (empty)
+ *    Input: "admin123!@#" → Expected: FALSE (special chars)
+ * 
+ * 2. ValidatePassword()
+ *    Input: "MyPassword123" → Expected: TRUE
+ *    Input: "short" → Expected: TRUE (>=4 allowed)
+ *    Input: "" → Expected: TRUE (empty allowed)
+ *    Input: Very long password... → Expected: FALSE if >255 chars
+ * 
+ * 3. CreateUserAccount()
+ *    Create account with username="test", password="test123"
+ *    Verify in registry: HKLM\SAM\SAM\Domains\Builtin\Users\Names\test
+ *    Verify RID created: HKLM\SAM\SAM\Domains\Builtin\Users\1000 (or next)
+ * 
+ * 4. AdminAccountPageProc() Dialog
+ *    - Username field accepts input correctly
+ *    - Password field shows bullets (●) by default
+ *    - Show Password checkbox reveals/hides text
+ *    - Next button disabled until passwords match
+ *    - Error messages display for invalid input
+ *    - Dialog remembers values when navigating back
+ */
+
+/*
+ * KNOWN LIMITATIONS
+ * =================
+ * 
+ * 1. Current ReactOS User Support
+ *    - User accounts are basic (no profiles yet)
+ *    - Group membership limited
+ *    - No home directory support
+ * 
+ * 2. Security Features Not Implemented Yet
+ *    - Password history
+ *    - Password expiration
+ *    - Account lockout after failed attempts
+ *    - ACL on user files/folders
+ * 
+ * 3. Advanced Features
+ *    - Password recovery options
+ *    - Hint questions (security questions)
+ *    - Multi-user automatic login
+ *    - User switching while logged in
+ * 
+ * 4. Login Manager
+ *    - Needs integration with logonui.exe
+ *    - Session manager (smss.exe) changes required
+ *    - Desktop environment (explorer.exe) handling
+ */
+
+/*
+ * FUTURE ENHANCEMENTS
+ * ===================
+ * 
+ * Phase 2: Multi-User Support
+ *   - Additional user account creation page
+ *   - User group assignment (Administrators, Users, Guests)
+ *   - Home directory setup per user
+ * 
+ * Phase 3: Advanced Security
+ *   - Windows Hello (biometric setup)
+ *   - PIN setup option
+ *   - Recovery key generation
+ * 
+ * Phase 4: Post-Installation
+ *   - User accounts management tool
+ *   - Password change utility
+ *   - Account properties editor
+ */
+
+/*
+ * INTEGRATION POINTS IN reactos.c
+ * ===============================
+ * 
+ * Add to main wizard property sheet setup:
+ * 
+ * PROPSHEETPAGE psp[7];  // Was 6 pages, now 7
+ * 
+ * psp[2].dwSize = sizeof(PROPSHEETPAGE);
+ * psp[2].hInstance = hInstance;
+ * psp[2].pszTemplate = MAKEINTRESOURCE(IDD_MODERN_ADMIN);
+ * psp[2].pfnDlgProc = AdminAccountPageProc;
+ * psp[2].lParam = (LPARAM)&g_ModernContext;
+ * psp[2].dwFlags = PSP_DEFAULT | PSP_USETITLE | PSP_HASHELP;
+ * psp[2].pszTitle = _T("Administrator Account");
+ * 
+ * // Update other page indices from 2→3, 3→4, etc.
+ * // Update psh.nPages = 7 (from 6)
+ * 
+ * Handle in WinMain/PropertySheetCallback:
+ * - Store username/password from page 2 in global context
+ * - Pass to installation worker thread
+ * - Create account during file copy phase
+ * - Report success/failure to Progress page
+ */
+
+#endif /* _REACTOS_SETUP_ADMIN_INTEGRATION_H_ */

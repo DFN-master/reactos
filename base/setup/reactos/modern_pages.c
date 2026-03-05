@@ -5,6 +5,7 @@
 
 #include "reactos.h"
 #include "modern_setup.h"
+#include "modern_resource.h"
 #include "resource.h"
 
 /* Welcome Page Procedure */
@@ -255,6 +256,318 @@ INT_PTR CALLBACK ProgressPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
                     /* Disable buttons during installation */
                     PropSheet_SetWizButtons(GetParent(hDlg), 0);
                     return TRUE;
+                    
+                default:
+                    break;
+            }
+            break;
+        }
+    }
+    
+    return FALSE;
+}
+
+/* ===============================================
+   PARTITION GRAPH PAGE
+   Visual disk/partition selector
+   =============================================== */
+INT_PTR CALLBACK PartitionGraphPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    PMODERN_SETUP_CONTEXT pContext;
+    
+    switch (message)
+    {
+        case WM_INITDIALOG:
+        {
+            pContext = (PMODERN_SETUP_CONTEXT)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pContext);
+            
+            /* Apply modern theme */
+            ApplyModernTheme(hDlg);
+            
+            /* Initialize partition list */
+            HWND hListView = GetDlgItem(hDlg, IDC_PARTITION_LIST);
+            if (hListView)
+            {
+                /* Set extended style with modern visual effects */
+                ListView_SetExtendedListViewStyle(hListView, 
+                    LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+                
+                /* Add columns */
+                LVCOLUMNW lvc;
+                lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+                
+                lvc.iSubItem = 0;
+                lvc.pszText = L"Partition";
+                lvc.cx = 120;
+                ListView_InsertColumn(hListView, 0, &lvc);
+                
+                lvc.iSubItem = 1;
+                lvc.pszText = L"Type";
+                lvc.cx = 100;
+                ListView_InsertColumn(hListView, 1, &lvc);
+                
+                lvc.iSubItem = 2;
+                lvc.pszText = L"Size";
+                lvc.cx = 80;
+                ListView_InsertColumn(hListView, 2, &lvc);
+                
+                lvc.iSubItem = 3;
+                lvc.pszText = L"Free Space";
+                lvc.cx = 80;
+                ListView_InsertColumn(hListView, 3, &lvc);
+            }
+            
+            return TRUE;
+        }
+        
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hDlg, &ps);
+            
+            /* Draw custom partition graph */
+            HWND hGraph = GetDlgItem(hDlg, IDC_PARTITION_GRAPH);
+            if (hGraph)
+            {
+                RECT rcGraph;
+                GetWindowRect(hGraph, &rcGraph);
+                ScreenToClient(hDlg, (LPPOINT)&rcGraph.left);
+                ScreenToClient(hDlg, (LPPOINT)&rcGraph.right);
+                
+                /* Draw partition visualization */
+                DrawPartitionGraph(hdc, &rcGraph);
+            }
+            
+            EndPaint(hDlg, &ps);
+            return TRUE;
+        }
+        
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_PARTITION_CREATE:
+                    /* Show create partition dialog */
+                    MessageBoxW(hDlg, L"Create partition feature coming soon", 
+                               L"ReactOS Setup", MB_OK | MB_ICONINFORMATION);
+                    break;
+                    
+                case IDC_PARTITION_DELETE:
+                    /* Delete selected partition */
+                    MessageBoxW(hDlg, L"Delete partition feature coming soon", 
+                               L"ReactOS Setup", MB_OK | MB_ICONINFORMATION);
+                    break;
+                    
+                case IDC_PARTITION_FORMAT:
+                    /* Format selected partition */
+                    MessageBoxW(hDlg, L"Format partition feature coming soon", 
+                               L"ReactOS Setup", MB_OK | MB_ICONINFORMATION);
+                    break;
+            }
+            break;
+        }
+        
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+            
+            switch (pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    return TRUE;
+                    
+                default:
+                    break;
+            }
+            break;
+        }
+    }
+    
+    return FALSE;
+}
+
+/* ===============================================
+   SUMMARY PAGE
+   Review installation settings before proceeding
+   =============================================== */
+INT_PTR CALLBACK SummaryPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    PMODERN_SETUP_CONTEXT pContext;
+    
+    switch (message)
+    {
+        case WM_INITDIALOG:
+        {
+            pContext = (PMODERN_SETUP_CONTEXT)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pContext);
+            
+            /* Build summary text */
+            WCHAR szSummary[1024];
+            swprintf(szSummary, 1024,
+                L"Installation Type:\n"
+                L"  • Express Install (Recommended Settings)\n\n"
+                L"Destination:\n"
+                L"  • Drive: C:\\ (Disk 0, Partition 1)\n"
+                L"  • File System: NTFS\n"
+                L"  • Partition Size: 15 GB\n\n"
+                L"Language & Region:\n"
+                L"  • Language: English (United States)\n"
+                L"  • Keyboard: US\n\n"
+                L"Components:\n"
+                L"  • ReactOS Core System\n"
+                L"  • Essential Drivers\n"
+                L"  • Basic Applications\n"
+                L"  • Modern DLL Package (22 proprietary DLLs)\n\n"
+                L"Boot Configuration:\n"
+                L"  • Boot Mode: UEFI with GPT\n"
+                L"  • Install Boot Loader: Yes");
+            
+            SetDlgItemTextW(hDlg, IDC_SUMMARY_DETAILS, szSummary);
+            
+            /* Set installation size and time estimate */
+            SetDlgItemTextW(hDlg, IDC_SUMMARY_INSTALL_SIZE, L"Installation size: 2.5 GB");
+            SetDlgItemTextW(hDlg, IDC_SUMMARY_TIME_EST, L"Estimated time: 15-30 minutes");
+            
+            return TRUE;
+        }
+        
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+            
+            switch (pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Change Next button to "Install" */
+                    PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    return TRUE;
+                    
+                case PSN_WIZNEXT:
+                    /* User clicked Install - proceed to installation */
+                    return FALSE;
+                    
+                default:
+                    break;
+            }
+            break;
+        }
+    }
+    
+    return FALSE;
+}
+
+/* ===============================================
+   COMPLETION PAGE
+   Installation success/failure screen
+   =============================================== */
+INT_PTR CALLBACK CompletionPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    PMODERN_SETUP_CONTEXT pContext;
+    static UINT_PTR RebootTimerID = 0;
+    static INT RebootCountdown = 10;
+    
+    switch (message)
+    {
+        case WM_INITDIALOG:
+        {
+            pContext = (PMODERN_SETUP_CONTEXT)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)pContext);
+            
+            /* Apply modern fonts */
+            HWND hTitle = GetDlgItem(hDlg, IDC_COMPLETE_TITLE);
+            if (hTitle)
+                SendMessageW(hTitle, WM_SETFONT, (WPARAM)pContext->hTitleFont, TRUE);
+            
+            /* Set completion message */
+            SetDlgItemTextW(hDlg, IDC_COMPLETE_MESSAGE,
+                L"ReactOS has been successfully installed on your computer.\n\n"
+                L"The computer needs to restart to complete the installation. "
+                L"When you restart, you will see the ReactOS welcome screen.\n\n"
+                L"Please remove any installation media (CD/DVD/USB) before restarting.");
+            
+            /* Check auto-reboot by default */
+            CheckDlgButton(hDlg, IDC_COMPLETE_REBOOT, BST_CHECKED);
+            
+            /* Start reboot countdown timer */
+            RebootTimerID = SetTimer(hDlg, 2, 1000, NULL); // 1 second interval
+            RebootCountdown = 10;
+            
+            return TRUE;
+        }
+        
+        case WM_TIMER:
+        {
+            if (wParam == 2 && IsDlgButtonChecked(hDlg, IDC_COMPLETE_REBOOT) == BST_CHECKED)
+            {
+                RebootCountdown--;
+                
+                WCHAR szText[256];
+                swprintf(szText, 256, 
+                    L"Restart computer automatically in %d seconds", RebootCountdown);
+                SetDlgItemTextW(hDlg, IDC_COMPLETE_REBOOT, szText);
+                
+                if (RebootCountdown <= 0)
+                {
+                    KillTimer(hDlg, RebootTimerID);
+                    RebootTimerID = 0;
+                    
+                    /* Initiate system restart */
+                    // ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OPERATINGSYSTEM | SHTDN_REASON_MINOR_INSTALLATION);
+                }
+            }
+            break;
+        }
+        
+        case WM_COMMAND:
+        {
+            if (LOWORD(wParam) == IDC_COMPLETE_REBOOT)
+            {
+                /* User toggled auto-reboot */
+                if (IsDlgButtonChecked(hDlg, IDC_COMPLETE_REBOOT) == BST_UNCHECKED)
+                {
+                    /* Stopped countdown */
+                    if (RebootTimerID)
+                    {
+                        KillTimer(hDlg, RebootTimerID);
+                        RebootTimerID = 0;
+                    }
+                    SetDlgItemTextW(hDlg, IDC_COMPLETE_REBOOT, 
+                        L"Restart computer automatically in 10 seconds");
+                }
+                else
+                {
+                    /* Restarted countdown */
+                    RebootCountdown = 10;
+                    RebootTimerID = SetTimer(hDlg, 2, 1000, NULL);
+                }
+            }
+            break;
+        }
+        
+        case WM_DESTROY:
+        {
+            if (RebootTimerID)
+                KillTimer(hDlg, RebootTimerID);
+            break;
+        }
+        
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+            
+            switch (pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Show only Finish button */
+                    PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_FINISH);
+                    return TRUE;
+                    
+                case PSN_WIZFINISH:
+                    /* User clicked Finish */
+                    // Initiate shutdown or reboot based on checkbox
+                    return FALSE;
                     
                 default:
                     break;

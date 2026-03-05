@@ -2974,7 +2974,7 @@ _tWinMain(HINSTANCE hInst,
     HANDLE hHotkeyThread;
     INITCOMMONCONTROLSEX iccx;
     PROPSHEETHEADER psh;
-    HPROPSHEETPAGE ahpsp[8];
+    HPROPSHEETPAGE ahpsp[9];  /* Increased from 8 to 9 for Admin Account page */
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
 
@@ -3051,6 +3051,17 @@ _tWinMain(HINSTANCE hInst,
         psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = TypeDlgProc;
         psp.pszTemplate = MAKEINTRESOURCEW(IDD_TYPEPAGE);
+        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+        /* Create the Administrator Account creation page - NEW PAGE */
+        psp.dwSize = sizeof(PROPSHEETPAGE);
+        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+        psp.pszHeaderTitle = L"Administrator Account";
+        psp.pszHeaderSubTitle = L"Create the first administrator account";
+        psp.hInstance = hInst;
+        psp.lParam = (LPARAM)&SetupData;
+        psp.pfnDlgProc = AdminAccountPageProc;  /* NEW: Modern admin page procedure */
+        psp.pszTemplate = MAKEINTRESOURCEW(IDD_MODERN_ADMIN);  /* NEW: Modern admin dialog */
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
         /* Create the upgrade/repair selection page */

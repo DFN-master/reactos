@@ -22,6 +22,9 @@ IDI_PARTITION   ICON "res/partition.ico"
 IDB_WATERMARK   BITMAP "res/watermark.bmp"
 IDB_HEADER      BITMAP "res/header.bmp"
 
+/* Modern UI Dialogs */
+#include "modern_dialogs.rc"
+
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "reactos.exe.manifest"
 
 /* UTF-8 */

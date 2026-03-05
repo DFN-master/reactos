@@ -98,6 +98,15 @@ INT_PTR CALLBACK PartitionGraphPageProc(HWND hDlg, UINT message, WPARAM wParam, 
 INT_PTR CALLBACK SummaryPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ProgressPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
+// Wizard Page Procedures
+INT_PTR CALLBACK WelcomePageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK ExpressInstallPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK AdminAccountPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK PartitionGraphPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SummaryPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK ProgressPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK CompletionPageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+
 // Helper Functions
 VOID CenterWindowOnScreen(HWND hWnd);
 VOID ApplyModernTheme(HWND hWnd);
