@@ -1,0 +1,202 @@
+/*
+ * ReactOS Modern Setup - Dialog Templates
+ * Copyright (C) 2026 ReactOS Team
+ *
+ * Modern Windows 7-style dialog definitions
+ */
+
+#include <windef.h>
+#include <winuser.h>
+#include "modern_resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/* ===============================================
+   MODERN WELCOME PAGE (Windows 7 Style)
+   =============================================== */
+IDD_MODERN_WELCOME DIALOGEX 0, 0, 500, 350
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Welcome to ReactOS"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    /* Large title */
+    LTEXT "Welcome to ReactOS", IDC_WELCOME_TITLE, 40, 30, 420, 40, 
+          SS_LEFT | WS_GROUP
+    
+    /* Subtitle */
+    LTEXT "Install the free and open source operating system", IDC_WELCOME_SUBTITLE, 
+          40, 75, 420, 20, SS_LEFT | WS_GROUP
+    
+    /* Main description */
+    LTEXT "ReactOS is a free and open source operating system based on the Windows architecture. \
+This installer will guide you through the installation process.\n\n\
+Before you begin:\n\
+• Backup your important data\n\
+• Ensure you have at least 2 GB of free disk space\n\
+• Have your product key ready (if applicable)\n\n\
+Click Next to continue.", 
+          IDC_WELCOME_DESCRIPTION, 40, 110, 420, 140, SS_LEFT | WS_GROUP
+    
+    /* Feature highlights */
+    GROUPBOX "What's New in ReactOS", IDC_WELCOME_FEATURES, 40, 260, 420, 70
+    LTEXT "✓ Windows 10 DLL compatibility (90%)\n\
+✓ UEFI/GPT boot support\n\
+✓ Modern application support\n\
+✓ Enhanced stability and performance", 
+          IDC_STATIC, 55, 275, 390, 50, SS_LEFT | WS_GROUP
+END
+
+/* ===============================================
+   EXPRESS INSTALL PAGE
+   =============================================== */
+IDD_MODERN_EXPRESS DIALOGEX 0, 0, 500, 350
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Installation Type"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    LTEXT "Choose how you want to install ReactOS", IDC_STATIC, 
+          40, 30, 420, 30, SS_LEFT | WS_GROUP
+    
+    /* Express Install option */
+    AUTORADIOBUTTON "Use recommended settings (Express)", IDC_INSTALL_EXPRESS, 
+                    60, 80, 380, 20, WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    LTEXT "• Install ReactOS to the first available drive\n\
+• Use recommended partition size (15 GB)\n\
+• Auto-detect language and keyboard\n\
+• Install essential drivers and applications\n\
+• Fastest installation method (recommended for most users)", 
+          IDC_EXPRESS_DESC, 80, 105, 360, 70, SS_LEFT | WS_GROUP
+    
+    /* Custom Install option */
+    AUTORADIOBUTTON "Custom installation", IDC_INSTALL_CUSTOM, 
+                    60, 190, 380, 20, BS_TOP | BS_MULTILINE
+    LTEXT "• Choose installation drive and partition\n\
+• Configure partition size and file system\n\
+• Select language, keyboard, and regional settings\n\
+• Choose which components to install\n\
+• Advanced options for experienced users", 
+          IDC_CUSTOM_DESC, 80, 215, 360, 70, SS_LEFT | WS_GROUP
+    
+    /* Info note */
+    LTEXT "You can change these settings at any time after installation.", 
+          IDC_STATIC, 60, 300, 380, 20, SS_LEFT | WS_GROUP
+END
+
+/* ===============================================
+   MODERN PROGRESS PAGE
+   =============================================== */
+IDD_MODERN_PROGRESS DIALOGEX 0, 0, 500, 350
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Installing ReactOS"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    LTEXT "Installing ReactOS...", IDC_STATIC, 40, 30, 420, 30, SS_LEFT | WS_GROUP
+    
+    /* Progress bar (custom drawn) */
+    CONTROL "", IDC_PROGRESS_BAR, "Static", SS_OWNERDRAW | WS_BORDER, 
+            40, 80, 420, 30
+    
+    /* Status text */
+    LTEXT "Copying files...", IDC_PROGRESS_STATUS, 40, 125, 420, 20, SS_LEFT | WS_GROUP
+    
+    /* Current item */
+    LTEXT "", IDC_PROGRESS_CURRENT, 40, 150, 420, 20, SS_LEFT | WS_GROUP
+    
+    /* Time remaining */
+    LTEXT "Time remaining: Calculating...", IDC_PROGRESS_TIME, 40, 175, 420, 20, SS_LEFT | WS_GROUP
+    
+    /* Installation steps list */
+    LTEXT "Installation steps:\n\
+1. ✓ Preparing installation\n\
+2. → Copying ReactOS files\n\
+3. ○ Installing boot loader\n\
+4. ○ Configuring system\n\
+5. ○ Installing drivers\n\
+6. ○ Finalizing installation", 
+          IDC_STATIC, 40, 220, 420, 100, SS_LEFT | WS_GROUP
+END
+
+/* ===============================================
+   INSTALLATION COMPLETE PAGE
+   =============================================== */
+IDD_MODERN_COMPLETE DIALOGEX 0, 0, 500, 350
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Installation Complete"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    LTEXT "Installation completed successfully!", IDC_COMPLETE_TITLE, 
+          40, 30, 420, 40, SS_LEFT | WS_GROUP
+    
+    LTEXT "ReactOS has been successfully installed on your computer.\n\n\
+The computer needs to restart to complete the installation. \
+When you restart, you will see the ReactOS welcome screen.\n\n\
+Please remove any installation media (CD/DVD/USB) before restarting.", 
+          IDC_COMPLETE_MESSAGE, 40, 85, 420, 80, SS_LEFT | WS_GROUP
+    
+    /* Reboot checkbox */
+    AUTOCHECKBOX "Restart computer automatically in 10 seconds", 
+                 IDC_COMPLETE_REBOOT, 40, 190, 420, 20, BS_TOP | BS_MULTILINE | WS_TABSTOP
+    
+    /* Thank you message */
+    GROUPBOX "Thank you for installing ReactOS!", IDC_STATIC, 40, 230, 420, 90
+    LTEXT "ReactOS is free and open source software maintained by volunteers worldwide.\n\n\
+Visit www.reactos.org for:\n\
+• Latest updates and drivers\n\
+• Community forums and support\n\
+• Applications and tutorials", 
+          IDC_STATIC, 55, 245, 390, 65, SS_LEFT | WS_GROUP
+END
+
+/* ===============================================
+   MODERN PARTITION GRAPH PAGE
+   =============================================== */
+IDD_MODERN_PARTITION DIALOGEX 0, 0, 500, 350
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Partition Selection"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    LTEXT "Select where you want to install ReactOS", IDC_STATIC, 
+          40, 30, 420, 25, SS_LEFT | WS_GROUP
+    
+    /* Graphical disk/partition display (custom drawn) */
+    CONTROL "", IDC_PARTITION_GRAPH, "Static", SS_OWNERDRAW | WS_BORDER, 
+            40, 65, 420, 120
+    
+    /* Partition list */
+    CONTROL "", IDC_PARTITION_LIST, "SysListView32", 
+            LVS_REPORT | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP, 
+            40, 200, 420, 90
+    
+    /* Partition management buttons */
+    PUSHBUTTON "New", IDC_PARTITION_CREATE, 40, 300, 80, 30
+    PUSHBUTTON "Delete", IDC_PARTITION_DELETE, 130, 300, 80, 30
+    PUSHBUTTON "Format", IDC_PARTITION_FORMAT, 220, 300, 80, 30
+    PUSHBUTTON "Advanced...", IDC_STATIC, 310, 300, 80, 30
+END
+
+/* ===============================================
+   SUMMARY PAGE
+   =============================================== */
+IDD_MODERN_SUMMARY DIALOGEX 0, 0, 500, 350
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Ready to Install"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    LTEXT "Review your installation settings", IDC_STATIC, 
+          40, 30, 420, 25, SS_LEFT | WS_GROUP
+    
+    /* Summary details */
+    GROUPBOX "Installation Summary", IDC_STATIC, 40, 70, 420, 180
+    LTEXT "", IDC_SUMMARY_DETAILS, 55, 90, 390, 145, SS_LEFT | WS_GROUP
+    
+    /* Additional info */
+    LTEXT "Installation size: 2.5 GB", IDC_SUMMARY_INSTALL_SIZE, 
+          55, 260, 200, 15, SS_LEFT | WS_GROUP
+    LTEXT "Estimated time: 15-30 minutes", IDC_SUMMARY_TIME_EST, 
+          260, 260, 200, 15, SS_LEFT | WS_GROUP
+    
+    /* Confirmation text */
+    LTEXT "Click Install to begin the installation process.\n\
+The computer will restart automatically when complete.", 
+          IDC_STATIC, 40, 285, 420, 30, SS_LEFT | WS_GROUP
+END
