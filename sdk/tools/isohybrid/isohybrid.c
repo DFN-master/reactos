@@ -38,7 +38,11 @@
 #include <sys/stat.h>
 //#include <inttypes.h>
 #ifdef REACTOS_ISOHYBRID_EFI_MAC_SUPPORT
-#include <uuid/uuid.h>
+    #ifdef _WIN32
+        #include "uuid_windows.h"
+    #else
+        #include <uuid/uuid.h>
+    #endif
 #endif
 
 #include "isohybrid.h"

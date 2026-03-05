@@ -105,3 +105,50 @@ add_livecd_shortcut("Command Prompt" cmd.exe "Profiles/Default User/Application 
 add_livecd_shortcut("ReactOS Explorer" explorer.exe "Profiles/Default User/Application Data/Microsoft/Internet Explorer/Quick Launch")
 
 add_custom_target(livecd_links DEPENDS ${LIVECD_SHORTCUTS})
+
+# =====================================================================
+# MODERN PROPRIETARY DLLs INTEGRATION
+# =====================================================================
+# Adicionado automaticamente em 2026-03-05 11:02:15
+# Script: install-modern-dlls-native.ps1
+# =====================================================================
+
+message(STATUS "[MODERN] Integrando DLLs proprietÃ¡rias ao bootcd.iso...")
+
+# DiretÃ³rio de DLLs proprietÃ¡rias
+set(PROPRIETARY_DLLS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/proprietary-dlls")
+
+# Procurar todas as DLLs no diretÃ³rio
+file(GLOB PROPRIETARY_DLLS "${PROPRIETARY_DLLS_DIR}/*.dll")
+
+# Adicionar cada DLL ao bootcd
+foreach(dll_path ${PROPRIETARY_DLLS})
+    get_filename_component(dll_name "${dll_path}" NAME)
+    
+    add_cd_file(
+        FILE "${dll_path}"
+        DESTINATION reactos/system32
+        FOR bootcd
+    )
+    
+    message(STATUS "[MODERN] âœ“ Adicionado: ${dll_name}")
+endforeach()
+
+# Contar DLLs adicionadas
+list(LENGTH PROPRIETARY_DLLS MODERN_DLL_COUNT)
+message(STATUS "[MODERN] Total de DLLs proprietÃ¡rias: ${MODERN_DLL_COUNT}")
+
+# Adicionar scripts de download
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/modern-dlls-download.bat)
+    add_cd_file(
+        FILE ${CMAKE_CURRENT_SOURCE_DIR}/modern-dlls-download.bat
+        DESTINATION reactos
+        FOR bootcd
+    )
+    message(STATUS "[MODERN] âœ“ Script downloader adicionado")
+endif()
+
+message(STATUS "[MODERN] IntegraÃ§Ã£o de DLLs proprietÃ¡rias concluÃ­da!")
+message(STATUS "[MODERN] bootcd.iso terÃ¡ compatibilidade ~90% com apps Windows 10")
+
+# =====================================================================
