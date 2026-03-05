@@ -38,12 +38,15 @@ typedef struct _DLG_DATA
     PGINA_CONTEXT pgContext;
     HBITMAP hLogoBitmap;
     HBITMAP hBarBitmap;
+    HBITMAP hBackgroundBitmap;
     HWND hWndBarCtrl;
     DWORD BarCounter;
     DWORD LogoWidth;
     DWORD LogoHeight;
     DWORD BarWidth;
     DWORD BarHeight;
+    HBRUSH hBackgroundBrush;
+    HBRUSH hAcrylicBrush;
 } DLG_DATA, *PDLG_DATA;
 
 static PDLG_DATA
@@ -86,6 +89,32 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
         pDlgData->BarWidth = bm.bmWidth;
         pDlgData->BarHeight = bm.bmHeight;
     }
+    
+    // Load wallpaper for background
+    WCHAR szWallpaper[MAX_PATH];
+    HKEY hKey;
+    DWORD dwType, dwSize = sizeof(szWallpaper);
+    
+    pDlgData->hBackgroundBitmap = NULL;
+    pDlgData->hBackgroundBrush = CreateSolidBrush(RGB(0, 120, 215)); // Win10 blue
+    pDlgData->hAcrylicBrush = CreateSolidBrush(RGB(30, 30, 30)); // Dark acrylic
+    
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, 
+                      L"Control Panel\\Desktop", 
+                      0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        if (RegQueryValueExW(hKey, L"Wallpaper", NULL, &dwType, 
+                            (LPBYTE)szWallpaper, &dwSize) == ERROR_SUCCESS)
+        {
+            if (szWallpaper[0] != L'\0')
+            {
+                pDlgData->hBackgroundBitmap = (HBITMAP)LoadImageW(NULL, szWallpaper, 
+                                                                   IMAGE_BITMAP, 0, 0, 
+                                                                   LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+            }
+        }
+        RegCloseKey(hKey);
+    }
 }
 
 static VOID
@@ -109,6 +138,21 @@ DlgData_Destroy(_Inout_ HWND hwndDlg)
     if (pDlgData->hLogoBitmap)
     {
         DeleteObject(pDlgData->hLogoBitmap);
+    }
+    
+    if (pDlgData->hBackgroundBitmap)
+    {
+        DeleteObject(pDlgData->hBackgroundBitmap);
+    }
+    
+    if (pDlgData->hBackgroundBrush)
+    {
+        DeleteObject(pDlgData->hBackgroundBrush);
+    }
+    
+    if (pDlgData->hAcrylicBrush)
+    {
+        DeleteObject(pDlgData->hAcrylicBrush);
     }
 
     HeapFree(GetProcessHeap(), 0, pDlgData);
@@ -1397,18 +1441,82 @@ LogonDialogProc(
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData && pDlgData->hLogoBitmap)
+            HDC hdc = BeginPaint(hwndDlg, &ps);
+            
+            if (pDlgData)
             {
-                BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
-                EndPaint(hwndDlg, &ps);
+                RECT rcClient;
+                GetClientRect(hwndDlg, &rcClient);
+                
+                // Draw background
+                if (pDlgData->hBackgroundBitmap)
+                {
+                    // Draw wallpaper stretched
+                    HDC hdcMem = CreateCompatibleDC(hdc);
+                    HBITMAP hOldBitmap = (HBITMAP)SelectObject(hdcMem, pDlgData->hBackgroundBitmap);
+                    
+                    BITMAP bm;
+                    GetObject(pDlgData->hBackgroundBitmap, sizeof(bm), &bm);
+                    
+                    SetStretchBltMode(hdc, HALFTONE);
+                    StretchBlt(hdc, 0, 0, rcClient.right, rcClient.bottom,
+                              hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+                    
+                    SelectObject(hdcMem, hOldBitmap);
+                    DeleteDC(hdcMem);
+                    
+                    // Apply dark overlay for modern look
+                    BLENDFUNCTION blend = {AC_SRC_OVER, 0, 60, 0}; // 60/255 opacity
+                    HDC hdcOverlay = CreateCompatibleDC(hdc);
+                    HBITMAP hbmOverlay = CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
+                    HBITMAP hOldOverlay = (HBITMAP)SelectObject(hdcOverlay, hbmOverlay);
+                    
+                    FillRect(hdcOverlay, &rcClient, pDlgData->hAcrylicBrush);
+                    
+                    // Apply alpha blend
+                    AlphaBlend(hdc, 0, 0, rcClient.right, rcClient.bottom,
+                              hdcOverlay, 0, 0, rcClient.right, rcClient.bottom, blend);
+                    
+                    SelectObject(hdcOverlay, hOldOverlay);
+                    DeleteObject(hbmOverlay);
+                    DeleteDC(hdcOverlay);
+                }
+                else
+                {
+                    // Fallback to solid blue background (Windows 10 default)
+                    FillRect(hdc, &rcClient, pDlgData->hBackgroundBrush);
+                }
             }
+            
+            EndPaint(hwndDlg, &ps);
             return TRUE;
         }
 
         case WM_DESTROY:
             DlgData_Destroy(hwndDlg);
             return TRUE;
+        
+        case WM_CTLCOLORSTATIC:
+        {
+            // Make static text transparent with white color
+            HDC hdcStatic = (HDC)wParam;
+            SetTextColor(hdcStatic, RGB(255, 255, 255)); // White text
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (INT_PTR)GetStockObject(NULL_BRUSH);
+        }
+        
+        case WM_CTLCOLOREDIT:
+        {
+            // Style edit controls with modern look
+            HDC hdcEdit = (HDC)wParam;
+            SetTextColor(hdcEdit, RGB(0, 0, 0)); // Black text
+            SetBkColor(hdcEdit, RGB(255, 255, 255)); // White background
+            
+            if (!pDlgData->hAcrylicBrush)
+                pDlgData->hAcrylicBrush = CreateSolidBrush(RGB(255, 255, 255));
+            
+            return (INT_PTR)pDlgData->hAcrylicBrush;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))

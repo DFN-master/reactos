@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <debug.h>
 #include <mm/ARM3/miarm.h>
+#include "compat_shims.h"
 
 /* GLOBALS ********************************************************************/
 
@@ -647,6 +648,15 @@ IopInitializeDriverModule(
     RtlCopyUnicodeString(&driverNamePaged, &DriverName);
     driverObject->DriverName = driverNamePaged;
 
+    /* Initialize Windows 10 compatibility shim for this driver */
+    NTSTATUS CompatStatus = IopInitializeCompatShim(driverObject);
+    if (!NT_SUCCESS(CompatStatus))
+    {
+        DPRINT("Warning: Failed to initialize compat shim for <%wZ> (0x%08lx)\n",
+               &driverObject->DriverName, CompatStatus);
+        /* Continue anyway - compat shim is informational */
+    }
+
     /* Finally, call its init function */
     Status = driverObject->DriverInit(driverObject, &RegistryPath);
     *DriverEntryStatus = Status;
@@ -704,6 +714,9 @@ IopInitializeDriverModule(
 
     /* Set the driver as initialized */
     IopReadyDeviceObjects(driverObject);
+
+    /* Log driver compatibility information after successful initialization */
+    IopLogDriverCompatibility(driverObject);
 
     if (PnpSystemInit) IopReinitializeDrivers();
 

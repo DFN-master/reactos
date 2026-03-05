@@ -1,0 +1,76 @@
+@REM
+@REM PROJECT:         ReactOS
+@REM LICENSE:         GPL - See COPYING in the top level directory
+@REM FILE:            media/inf/win10_driver_compat.inf
+@REM PURPOSE:         Windows 10 Driver Compatibility Profile
+@REM DESCRIPTION:
+@REM   This INF allows drivers built for Windows 10 / Windows Server 2016+
+@REM   to be installed and run on ReactOS with compatibility shims.
+
+[Version]
+Signature="$Windows NT$"
+; ReactOS-specific compatibility version
+Class=WinCompatible
+Provider=%ReactOS%
+DriverVer=03/04/2026,1.0
+CatalogFile=win10_compat.cat
+
+[Manufacturer]
+%ReactOS%=ReactOS_Win10_Compat,NTamd64
+%ReactOS%=ReactOS_Win10_Compat,NT
+
+@REM
+@REM Windows 10 Driver Compatibility Settings
+@REM These allow drivers targeting Windows 10 to work on ReactOS
+@REM
+
+[ReactOS_Win10_Compat]
+@REM Generic compatibility entry for Windows 10 drivers
+%Win10_Compat_Desc%=Win10_Compat_Inst,{00000000-0000-0000-0000-000000000000}
+
+[ReactOS_Win10_Compat.NTamd64]
+%Win10_Compat_Desc%=Win10_Compat_Inst,{00000000-0000-0000-0000-000000000000}
+
+[Win10_Compat_Inst]
+@REM Copy compatibility shim files
+CopyFiles=Win10_Compat_Sys
+
+@REM Set compatibility flags in registry
+AddReg=Win10_Compat_Registry
+
+[Win10_Compat_Sys]
+win10_compat.sys
+
+[Win10_Compat_Registry]
+@REM Registry entries to enable Windows 10 compatibility mode
+HKLM,"SYSTEM\CurrentControlSet\Services\Win10_Compat",,,"Windows 10 Compatibility Driver"
+HKLM,"SYSTEM\CurrentControlSet\Services\Win10_Compat","Type",0x00010001,0x01
+HKLM,"SYSTEM\CurrentControlSet\Services\Win10_Compat","Start",0x00010001,0x04
+HKLM,"SYSTEM\CurrentControlSet\Services\Win10_Compat","ErrorControl",0x00010001,0x00
+HKLM,"SYSTEM\CurrentControlSet\Services\Win10_Compat","ImagePath",0x00020000,"%SystemRoot%\System32\drivers\win10_compat.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Win10_Compat","DisplayName",,"@%SystemRoot%\System32\drivers\win10_compat.sys,-1"
+
+@REM Feature compatibility flags
+HKLM,"SYSTEM\CurrentControlSet\Control\Win10Compatibility",,,"Windows 10 Compatibility Settings"
+HKLM,"SYSTEM\CurrentControlSet\Control\Win10Compatibility","EnableWin10APIs",0x00010001,0x01
+HKLM,"SYSTEM\CurrentControlSet\Control\Win10Compatibility","EnableIoValidation",0x00010001,0x01
+HKLM,"SYSTEM\CurrentControlSet\Control\Win10Compatibility","EnableFileInfoCompat",0x00010001,0x01
+HKLM,"SYSTEM\CurrentControlSet\Control\Win10Compatibility","LogIncompatibleCalls",0x00010001,0x01
+
+@REM Default compatibility mode for legacy drivers
+HKLM,"SYSTEM\CurrentControlSet\Control\Win10Compatibility","LegacyDriverMode",0x00010001,0x01
+
+[DestinationDirs]
+Win10_Compat_Sys=12  @REM Destination: %SystemRoot%\System32\drivers
+
+[SourceDisksNames]
+1=%DiskName%
+
+[SourceDisksFiles]
+win10_compat.sys=1
+
+[Strings]
+ReactOS="ReactOS Foundation"
+Win10_Compat_Desc="Windows 10 Driver Compatibility Module"
+DiskName="ReactOS Installation Media"
+

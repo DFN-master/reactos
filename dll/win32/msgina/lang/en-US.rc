@@ -10,33 +10,55 @@ BEGIN
     LTEXT "", IDC_STATUS_MESSAGE, 7, 59, 261, 12, SS_WORDELLIPSIS
 END
 
-IDD_WELCOME DIALOGEX 0, 0, 275, 78
-STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Welcome to ReactOS"
-FONT 8, "MS Shell Dlg"
+IDD_WELCOME DIALOGEX 0, 0, 800, 600
+STYLE WS_POPUP | WS_VISIBLE | DS_SETFONT | DS_CENTER
+FONT 11, "Segoe UI", 400, 0, 0x0
 BEGIN
-    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
-    ICON IDI_KEYBOARD, IDC_STATIC, 7, 53, 32, 32
-    LTEXT "Press Ctrl-Alt-Delete to begin.", IDC_STATIC, 38, 59, 230, 14
+    // Background - will be drawn programmatically
+    CONTROL "", IDC_DLG_BG, "Static", SS_OWNERDRAW, 0, 0, 800, 600
+    
+    // Welcome message centered
+    LTEXT "Welcome to ReactOS", IDC_STATIC, 200, 250, 400, 40, SS_CENTER | WS_GROUP, WS_EX_TRANSPARENT
+    
+    // Instruction text (modern style)
+    LTEXT "Press Ctrl+Alt+Delete to continue", IDC_STATIC, 250, 310, 300, 24, SS_CENTER | WS_GROUP, WS_EX_TRANSPARENT
+    
+    // Hide original elements
+    CONTROL "", IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 0, 0, NOT WS_VISIBLE
+    CONTROL "", IDC_BAR, "Static", SS_BITMAP, 0, 0, 0, 0, NOT WS_VISIBLE
+    ICON IDI_KEYBOARD, IDC_STATIC, 0, 0, 0, 0, NOT WS_VISIBLE
 END
 
-IDD_LOGON DIALOGEX 0, 0, 275, 147
-STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Logon"
-FONT 8, "MS Shell Dlg"
+IDD_LOGON DIALOGEX 0, 0, 800, 600
+STYLE WS_POPUP | WS_VISIBLE | DS_SETFONT | DS_CENTER
+FONT 11, "Segoe UI", 400, 0, 0x0
 BEGIN
-    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
-    LTEXT "Username:", IDC_STATIC, 6, 60, 52, 8
-    EDITTEXT IDC_LOGON_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
-    LTEXT "Password:", IDC_STATIC, 6, 78, 52, 8
-    EDITTEXT IDC_LOGON_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Log on to:", IDC_STATIC, 6, 96, 52, 8
-    COMBOBOX IDC_LOGON_DOMAIN, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 106, 122, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 122, 50, 14
-    PUSHBUTTON "&Shut Down", IDC_LOGON_SHUTDOWN, 214, 122, 50, 14
+    // Background placeholder - will be drawn programmatically
+    CONTROL "", IDC_DLG_BG, "Static", SS_OWNERDRAW | SS_NOTIFY, 0, 0, 800, 600
+    
+    // User avatar image (centered)
+    CONTROL "", IDC_ROSLOGO, "Static", SS_BITMAP | SS_CENTERIMAGE, 350, 160, 100, 100
+    
+    // Username display (centered below avatar) 
+    LTEXT "Username", IDC_STATIC, 250, 270, 300, 24, SS_CENTER | WS_GROUP, WS_EX_TRANSPARENT
+    
+    // Password field (centered, modern style)
+    LTEXT "Password", IDC_STATIC, 300, 310, 200, 12, SS_LEFT | WS_GROUP, WS_EX_TRANSPARENT
+    EDITTEXT IDC_LOGON_PASSWORD, 300, 325, 200, 32, ES_AUTOHSCROLL | ES_PASSWORD | WS_BORDER
+    
+    // Sign in button (modern style)
+    DEFPUSHBUTTON "Sign in", IDOK, 425, 365, 75, 32
+    
+    // Domain selector (hidden by default, shown on click)
+    LTEXT "", IDC_STATIC, 0, 0, 0, 0
+    COMBOBOX IDC_LOGON_DOMAIN, 0, 0, 0, 0, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | NOT WS_VISIBLE
+    EDITTEXT IDC_LOGON_USERNAME, 0, 0, 0, 0, ES_AUTOHSCROLL | NOT WS_VISIBLE
+    
+    // Shutdown button (bottom right corner)
+    PUSHBUTTON "Shut down", IDC_LOGON_SHUTDOWN, 700, 550, 85, 36
+    
+    // Cancel hidden
+    PUSHBUTTON "Cancel", IDCANCEL, 0, 0, 0, 0, NOT WS_VISIBLE
 END
 
 IDD_SECURITY DIALOGEX 0, 0, 275, 164
