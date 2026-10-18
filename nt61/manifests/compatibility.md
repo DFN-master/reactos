@@ -49,12 +49,14 @@ items:
     architectures: [x86, x64]
     state: IMPLEMENTED
     classification: ABSENT  # was STUB (returned FALSE)
-    evidence: []
+    evidence:
+      - research/evidence/2026-10-18-getsystemfilecachesize-win7.md
     dependencies:
-      - NtQuerySystemInformation(SystemFileCacheInformation)
-    tests: []
-    win7_result: NOT_TESTED
-    reactos_result: NOT_TESTED  # implemented but not tested
+      - NtQuerySystemInformation(SystemFileCacheInformationEx)
+    tests:
+      - modules/rostests/apitests/kernel32/GetSystemFileCacheSize.c
+    win7_result: VERIFIED  # REA analysis of kernel32.dll (0x77e77c34)
+    reactos_result: IMPLEMENTED  # build OK, not yet tested in VM
     observed_divergence: "ReactOS returned FALSE (STUB); Windows 7 returns TRUE with cache size values"
     risks:
       - C2: user-mode DLL change (low risk)
