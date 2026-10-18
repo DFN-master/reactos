@@ -570,7 +570,7 @@ GetSystemFirmwareTable(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -578,8 +578,31 @@ GetSystemFileCacheSize(OUT PSIZE_T lpMinimumFileCacheSize,
                        OUT PSIZE_T lpMaximumFileCacheSize,
                        OUT PDWORD lpFlags)
 {
-    STUB;
-    return FALSE;
+    SYSTEM_FILECACHE_INFORMATION CacheInfo;
+    NTSTATUS Status;
+    ULONG ReturnLength;
+
+    Status = NtQuerySystemInformation(SystemFileCacheInformation,
+                                      &CacheInfo,
+                                      sizeof(CacheInfo),
+                                      &ReturnLength);
+
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    if (lpMinimumFileCacheSize)
+        *lpMinimumFileCacheSize = CacheInfo.MinimumWorkingSet;
+
+    if (lpMaximumFileCacheSize)
+        *lpMaximumFileCacheSize = CacheInfo.MaximumWorkingSet;
+
+    if (lpFlags)
+        *lpFlags = CacheInfo.Flags;
+
+    return TRUE;
 }
 
 /*

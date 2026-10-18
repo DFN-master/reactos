@@ -38,8 +38,30 @@ items:
       - C3: kernel Executive change
       - No REA verification of the specific case yet
       - Hardware-dependent behavior unknown
-    next_action: "Isolate SystemPowerInformation case in Windows 7 ntoskrnl via REA (jump table analysis), then write test and implement"
+    next_action: "Isolate SystemProcessorIdleInformation case in Windows 7 ntoskrnl via REA (jump table analysis), then write test and implement"
     specification: nt61/specifications/NT61-0001-systempowerinformation.md
+
+  - id: NT61-0002
+    name: GetSystemFileCacheSize (kernel32)
+    component: kernel32 (client/sysinfo.c)
+    reactos_paths:
+      - dll/win32/kernel32/client/sysinfo.c
+    architectures: [x86, x64]
+    state: IMPLEMENTED
+    classification: ABSENT  # was STUB (returned FALSE)
+    evidence: []
+    dependencies:
+      - NtQuerySystemInformation(SystemFileCacheInformation)
+    tests: []
+    win7_result: NOT_TESTED
+    reactos_result: NOT_TESTED  # implemented but not tested
+    observed_divergence: "ReactOS returned FALSE (STUB); Windows 7 returns TRUE with cache size values"
+    risks:
+      - C2: user-mode DLL change (low risk)
+      - Field mapping (MinimumWorkingSet -> min, MaximumWorkingSet -> max) not verified on Windows 7
+      - NtSetSystemInformation(SystemFileCacheInformation) still not implemented
+    next_action: "Write apitest, run on ReactOS VM, verify on Windows 7 reference"
+    specification: nt61/specifications/NT61-0002-getsystemfilecachesize.md
 ```
 
 ## Selection log
