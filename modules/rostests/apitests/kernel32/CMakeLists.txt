@@ -22,6 +22,7 @@ list(APPEND SOURCE
     GetFinalPathNameByHandle.c
     GetLocaleInfo.c
     GetModuleFileName.c
+    GetSystemFileCacheSize.c
     GetVolumeInformation.c
     InitOnce.c
     interlck.c

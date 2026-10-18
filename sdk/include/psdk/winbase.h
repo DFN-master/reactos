@@ -2155,6 +2155,9 @@ UINT WINAPI GetSystemDirectoryA(LPSTR,UINT);
 UINT WINAPI GetSystemDirectoryW(LPWSTR,UINT);
 
 VOID WINAPI GetSystemInfo(LPSYSTEM_INFO);
+BOOL WINAPI GetSystemFileCacheSize(_Out_ PSIZE_T lpMinimumFileCacheSize,
+                                  _Out_ PSIZE_T lpMaximumFileCacheSize,
+                                  _Out_ PDWORD lpFlags);
 BOOL WINAPI GetSystemPowerStatus(_Out_ LPSYSTEM_POWER_STATUS);
 #if (_WIN32_WINNT >= 0x0502)
 BOOL WINAPI GetSystemRegistryQuota(_Out_opt_ PDWORD, _Out_opt_ PDWORD);
