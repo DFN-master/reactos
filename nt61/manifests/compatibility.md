@@ -17,7 +17,7 @@
 ```yaml
 items:
   - id: NT61-0001
-    name: SystemPowerInformation (NtQuerySystemInformation, class 42)
+    name: SystemProcessorIdleInformation (NtQuerySystemInformation, class 42)
     component: ntoskrnl (Executive, ex/sysinfo.c)
     reactos_paths:
       - ntoskrnl/ex/sysinfo.c (lines 2076-2088)
