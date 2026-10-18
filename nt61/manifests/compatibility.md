@@ -15,10 +15,31 @@
 ## Items
 
 ```yaml
-# (empty — no item has yet been selected or evidenced)
-# First item will be added only after the baseline is established and
-# the first experiment is chosen with evidence.
-items: []
+items:
+  - id: NT61-0001
+    name: SystemPowerInformation (NtQuerySystemInformation, class 42)
+    component: ntoskrnl (Executive, ex/sysinfo.c)
+    reactos_paths:
+      - ntoskrnl/ex/sysinfo.c (lines 2076-2088)
+    architectures: [x86, x64]
+    state: INVESTIGATING
+    classification: ABSENT   # ReactOS returns STATUS_NOT_IMPLEMENTED
+    evidence:
+      - research/evidence/ (pending — REA analysis of ntoskrnl case not yet isolated)
+    dependencies:
+      - KeNumberProcessors
+      - PROCESSOR_POWER_INFORMATION struct
+    tests:
+      - modules/rostests/apitests/ntdll/NtQuerySystemInformation.c (to be extended)
+    win7_result: NOT_TESTED
+    reactos_result: NOT_TESTED  # STATUS_NOT_IMPLEMENTED
+    observed_divergence: "ReactOS returns STATUS_NOT_IMPLEMENTED; Windows 7 returns STATUS_SUCCESS with SYSTEM_POWER_INFORMATION filled"
+    risks:
+      - C3: kernel Executive change
+      - No REA verification of the specific case yet
+      - Hardware-dependent behavior unknown
+    next_action: "Isolate SystemPowerInformation case in Windows 7 ntoskrnl via REA (jump table analysis), then write test and implement"
+    specification: nt61/specifications/NT61-0001-systempowerinformation.md
 ```
 
 ## Selection log
