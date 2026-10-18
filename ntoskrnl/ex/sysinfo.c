@@ -1535,6 +1535,12 @@ QSI_DEF(SystemFileCacheInformation)
     return STATUS_SUCCESS;
 }
 
+/* Class 81 - File Cache Information Ex (alias for class 21) */
+QSI_DEF(SystemFileCacheInformationEx)
+{
+    return QSISystemFileCacheInformation(Buffer, Size, ReqSize);
+}
+
 SSI_DEF(SystemFileCacheInformation)
 {
     if (Size < sizeof(SYSTEM_FILECACHE_INFORMATION))
@@ -3015,6 +3021,7 @@ CallQS[] =
     SI_QX(SystemVdmInstemulInformation),
     SI_QX(SystemVdmBopInformation), /* it should be SI_XX */
     SI_QS(SystemFileCacheInformation),
+    SI_QX(SystemFileCacheInformationEx),
     SI_QX(SystemPoolTagInformation),
     SI_QX(SystemInterruptInformation),
     SI_QS(SystemDpcBehaviorInformation),

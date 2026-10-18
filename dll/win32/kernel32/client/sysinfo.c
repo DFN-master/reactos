@@ -582,7 +582,7 @@ GetSystemFileCacheSize(OUT PSIZE_T lpMinimumFileCacheSize,
     NTSTATUS Status;
     ULONG ReturnLength;
 
-    Status = NtQuerySystemInformation(SystemFileCacheInformation,
+    Status = NtQuerySystemInformation(SystemFileCacheInformationEx,
                                       &CacheInfo,
                                       sizeof(CacheInfo),
                                       &ReturnLength);
@@ -594,13 +594,20 @@ GetSystemFileCacheSize(OUT PSIZE_T lpMinimumFileCacheSize,
     }
 
     if (lpMinimumFileCacheSize)
-        *lpMinimumFileCacheSize = CacheInfo.MinimumWorkingSet;
+        *lpMinimumFileCacheSize = CacheInfo.MinimumWorkingSet * PAGE_SIZE;
 
     if (lpMaximumFileCacheSize)
-        *lpMaximumFileCacheSize = CacheInfo.MaximumWorkingSet;
+        *lpMaximumFileCacheSize = CacheInfo.MaximumWorkingSet * PAGE_SIZE;
 
     if (lpFlags)
-        *lpFlags = CacheInfo.Flags;
+    {
+        DWORD Flags = 0;
+        if (CacheInfo.Flags & 0x4)
+            Flags |= 0x4;
+        if (CacheInfo.Flags & 0x1)
+            Flags |= 0x1;
+        *lpFlags = Flags;
+    }
 
     return TRUE;
 }
