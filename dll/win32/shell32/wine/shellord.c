@@ -34,6 +34,7 @@
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <commoncontrols.h>
+#include <strsafe.h>
 #include "../shellrecyclebin/recyclebin.h"
 
 #include <wine/debug.h>
@@ -72,6 +73,12 @@ extern INT    WINAPI AddMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData);
 extern INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum);
 extern INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);
 #endif
+
+EXTERN_C HRESULT SHGetNameAndFlagsW(LPCITEMIDLIST pidl, DWORD Shgdn, LPWSTR pszText, UINT cchBuf, DWORD *pSfgao);
+
+static HIMAGELIST DAD_himlTrack = NULL;
+static POINT DAD_ptHotspot;
+static BOOL DAD_bDragging = FALSE;
 
 /*************************************************************************
  * ParseFieldA					[internal]
@@ -1762,63 +1769,147 @@ BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, const POINT * p
 /*************************************************************************
  * DAD_DragEnter				[SHELL32.130]
  *
+ * @param[in] hwnd
+ * Window to receive the drag image.
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ *
  */
-BOOL WINAPI DAD_DragEnter(HWND hwnd)
+BOOL WINAPI DAD_DragEnter(_In_ HWND hwnd)
 {
-    FIXME("hwnd = %p\n",hwnd);
-    return FALSE;
+    POINT p;
+
+    GetCursorPos(&p);
+    return DAD_DragEnterEx(hwnd, p);
 }
+
 /*************************************************************************
  * DAD_DragEnterEx				[SHELL32.131]
  *
+ * @param[in] hwnd
+ * Window to receive the drag image
+ *
+ * @param[in] p
+ * Initial position of the drag image
+ *
+ * @return
+ * TRUE on success, FALSE on failure
  */
-BOOL WINAPI DAD_DragEnterEx(HWND hwnd, POINT p)
+BOOL WINAPI DAD_DragEnterEx(_In_ HWND hwnd, _In_ POINT p)
 {
-    FIXME("hwnd = %p (%d,%d)\n",hwnd,p.x,p.y);
-    return FALSE;
+    if (!DAD_himlTrack)
+        return FALSE;
+
+    if (!ImageList_BeginDrag(DAD_himlTrack, 0, DAD_ptHotspot.x, DAD_ptHotspot.y))
+        return FALSE;
+
+    if (!ImageList_DragEnter(hwnd, p.x, p.y))
+    {
+        ImageList_EndDrag();
+        return FALSE;
+    }
+
+    DAD_bDragging = TRUE;
+    return TRUE;
 }
+
 /*************************************************************************
  * DAD_DragMove				[SHELL32.134]
  *
+ * @param[in] p
+ * New position of the drag image
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ *
  */
-BOOL WINAPI DAD_DragMove(POINT p)
+BOOL WINAPI DAD_DragMove(_In_ POINT p)
 {
-    FIXME("(%d,%d)\n",p.x,p.y);
-    return FALSE;
+    if (!DAD_bDragging)
+        return FALSE;
+
+    return ImageList_DragMove(p.x, p.y);
 }
+
 /*************************************************************************
  * DAD_DragLeave				[SHELL32.132]
+ *
+ * @return
+ * TRUE on success, FALSE on failure
  *
  */
 BOOL WINAPI DAD_DragLeave(VOID)
 {
-    FIXME("\n");
-    return FALSE;
+    if (!DAD_bDragging)
+        return FALSE;
+
+    ImageList_DragLeave(NULL);
+    ImageList_EndDrag();
+    DAD_bDragging = FALSE;
+    return TRUE;
 }
+
 /*************************************************************************
  * DAD_SetDragImage				[SHELL32.136]
  *
- * NOTES
- *  exported by name
+ * @param[in] himlTrack
+ * Image list containing the drag image or (HIMAGELIST)-1 to clear it
+ *
+ * @param[in] lppt
+ * Hotspot offset within the image or NULL for (0,0)
+ *
+ * @return
+ * TRUE on success, FALSE on failure
+ *
+ * @note
+ * Exported by name
+ *
  */
 BOOL WINAPI DAD_SetDragImage(
-	HIMAGELIST himlTrack,
-	LPPOINT lppt)
+	_In_ HIMAGELIST himlTrack,
+	_In_opt_ LPPOINT lppt)
 {
-    FIXME("%p %p stub\n",himlTrack, lppt);
-    return FALSE;
+    if (himlTrack == (HIMAGELIST)(ULONG_PTR)-1)
+    {
+        if (DAD_bDragging)
+            DAD_DragLeave();
+        DAD_himlTrack = NULL;
+        return TRUE;
+    }
+
+    if (!himlTrack)
+        return FALSE;
+
+    DAD_himlTrack = himlTrack;
+    if (lppt)
+        DAD_ptHotspot = *lppt;
+    else
+        DAD_ptHotspot.x = DAD_ptHotspot.y = 0;
+
+    return TRUE;
 }
+
 /*************************************************************************
  * DAD_ShowDragImage				[SHELL32.137]
  *
- * NOTES
- *  exported by name
+ * @param[in] bShow
+ * TRUE to show the drag image, FALSE to hide it
+ *
+ * @return
+ * TRUE on success, FALSE on failure
+ *
+ * @note
+ * Exported by name
+ *
  */
-BOOL WINAPI DAD_ShowDragImage(BOOL bShow)
+BOOL WINAPI DAD_ShowDragImage(_In_ BOOL bShow)
 {
-    FIXME("0x%08x stub\n",bShow);
-    return FALSE;
-}
+    if (!DAD_bDragging)
+        return FALSE;
+
+    return ImageList_DragShowNolock(bShow);
+} 
 
 /*************************************************************************
  * ReadCabinetState				[SHELL32.651] NT 4.0
@@ -2644,48 +2735,87 @@ BOOL WINAPI SHGetNewLinkInfoA(LPCSTR pszLinkTo, LPCSTR pszDir, LPSTR pszName, BO
 BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName, BOOL *pfMustCopy,
                               UINT uFlags)
 {
-    const WCHAR *basename;
-    WCHAR *dst_basename;
+    const UINT HANDLEDFLAGS = SHGNLI_PIDL | SHGNLI_NOUNIQUE | SHGNLI_NOLNK | SHGNLI_NOLOCNAME | SHGNLI_USEURLEXT;
+    PCWSTR basename, pszDotForExt = L".", pszExt = (uFlags & SHGNLI_USEURLEXT) ? L"url" : L"lnk";
+    WCHAR *dst_basename, szTarget[MAX_PATH];
     int i=2;
+    LPCITEMIDLIST pidl = (uFlags & SHGNLI_PIDL) ? (LPCITEMIDLIST)pszLinkTo : NULL;
+    SHFILEINFO fi;
+    BOOL UseDisplayName = FALSE;
+    UINT SHGFIPidlFlag = pidl ? SHGFI_PIDL : 0;
 
     TRACE("(%s, %s, %p, %p, 0x%08x)\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
           pszName, pfMustCopy, uFlags);
 
+    if (uFlags & ~HANDLEDFLAGS)
+        FIXME("ignoring flags: 0x%08x\n", uFlags & ~HANDLEDFLAGS);
+
     *pfMustCopy = FALSE;
+    fi.dwAttributes = SFGAO_FILESYSTEM | SFGAO_LINK;
+    if (SHGetFileInfoW(pszLinkTo, 0, &fi, sizeof(fi), SHGFI_DISPLAYNAME | SHGFI_ATTRIBUTES | SHGFI_ATTR_SPECIFIED | SHGFIPidlFlag))
+        UseDisplayName = TRUE;
 
-    if (uFlags & SHGNLI_PIDL)
+    if (pidl)
     {
-        FIXME("SHGNLI_PIDL flag unsupported\n");
-        return FALSE;
-    }
+        if (!UseDisplayName)
+            return FALSE;
 
-    if (uFlags)
-        FIXME("ignoring flags: 0x%08x\n", uFlags);
+        pszLinkTo = fi.szDisplayName;
+        UINT shgdn = (uFlags & SHGNLI_NOLOCNAME) ? SHGDN_FORPARSING : SHGDN_NORMAL;
+        if ((fi.dwAttributes & SFGAO_LINK) &&
+            SUCCEEDED(SHGetNameAndFlagsW(pidl, shgdn | SHGDN_INFOLDER, szTarget, _countof(szTarget), NULL)))
+        {
+            StringCchCopyW(fi.szDisplayName, _countof(fi.szDisplayName), szTarget); // Including possible .lnk extension
+        }
+
+        if (SUCCEEDED(SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, szTarget, _countof(szTarget), NULL)))
+            pszLinkTo = szTarget;
+        else
+            fi.dwAttributes &= ~SFGAO_FILESYSTEM; // We can't validate this PIDL as a path
+    }
+    else if (uFlags & SHGNLI_NOLOCNAME)
+    {
+        UseDisplayName = FALSE;
+    }
 
     /* FIXME: should test if the file is a shortcut or DOS program */
-    if (GetFileAttributesW(pszLinkTo) == INVALID_FILE_ATTRIBUTES)
+    if ((fi.dwAttributes & SFGAO_FILESYSTEM) && GetFileAttributesW(pszLinkTo) == INVALID_FILE_ATTRIBUTES)
         return FALSE;
 
-    basename = strrchrW(pszLinkTo, '\\');
-    if (basename)
-        basename = basename+1;
-    else
-        basename = pszLinkTo;
-
-    lstrcpynW(pszName, pszDir, MAX_PATH);
-    if (!PathAddBackslashW(pszName))
-        return FALSE;
-
-    dst_basename = pszName + strlenW(pszName);
-
-    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s.lnk", basename);
-
-    while (GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
+    if (fi.dwAttributes & SFGAO_LINK)
     {
-        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s (%d).lnk", basename, i);
-        i++;
+        *pfMustCopy = TRUE; // The caller is not supposed to create a .lnk pointing to a .lnk
+
+        // Remove the "inputname.lnk" extension so that the "(%d)" handling can add it back correctly
+        uFlags &= ~SHGNLI_NOLNK;
+        pszExt = PathFindExtensionW(pszLinkTo);
+        pszDotForExt = L"";
+        UseDisplayName = TRUE;
+        if (pszLinkTo != fi.szDisplayName)
+            StringCchCopyW(fi.szDisplayName, _countof(fi.szDisplayName), pszLinkTo);
+        if (*pszExt)
+            PathRemoveExtension(fi.szDisplayName);
     }
 
+    if (uFlags & SHGNLI_NOLNK)
+        pszDotForExt = pszExt = L""; // The caller does not want us to append an extension
+
+    basename = PathFindFileNameW(UseDisplayName ? fi.szDisplayName : pszLinkTo);
+    *pszName = UNICODE_NULL;
+    if (!(uFlags & SHGNLI_NOUNIQUE)) // SHGNLI_NOUNIQUE does not prefix the directory
+    {
+        StringCchCopyW(pszName, MAX_PATH, pszDir);
+        if (!PathAddBackslashW(pszName))
+            return FALSE;
+    }
+    dst_basename = pszName + strlenW(pszName);
+
+    StringCchPrintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s%s%s", basename, pszDotForExt, pszExt);
+    while (!(uFlags & SHGNLI_NOUNIQUE) && GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
+    {
+        StringCchPrintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s (%d)%s%s", basename, i, pszDotForExt, pszExt);
+        i++;
+    }
     return TRUE;
 }
 

@@ -29,8 +29,8 @@
 #include <reactos/debug.h>
 #include <shellutils.h>
 #include <shellapi.h>
+#include <msxml2.h>
 #include <mmc.h>
-
 
 #define WM_USER_CLOSE_CHILD (WM_USER + 1)
 
@@ -38,21 +38,38 @@
 
 #include "resource.h"
 
-typedef enum _CONSOLE_MODE
+typedef enum _DOCUMENT_MODE
 {
-    AuthorMode = 0,
-    UserModeFull,
-    UserModeMultiple,
-    UserModeSingle
-} CONSOLE_MODE, *PCONSOLE_MODE;
+    DocumentMode_Author = 0,
+    DocumentMode_User,
+    DocumentMode_UserMDI,
+    DocumentMode_UserSDI
+} DOCUMENT_MODE, *PDOCUMENT_MODE;
 
+typedef enum _LISTVIEW_MODE
+{
+    ListView_SmallIcons = 0,
+    ListView_LargeIcons,
+    ListView_List,
+    ListView_Detail
+} LISTVIEW_MODE, *PLISTVIEW_MODE;
 
+#include "mscfile.h"
+#include "misc.h"
+
+class CMainWnd;
+
+#include "CRecentFileEntry.h"
 #include "CSnapinCacheEntry.h"
 #include "CSnapin.h"
+#include "CSnapinAlias.h"
+#include "CActionWnd.h"
 #include "CConsoleWnd.h"
 #include "CMainWnd.h"
 
+#include "CAboutSnapinDialog.h"
 #include "CAddDialog.h"
+#include "CAddAdvancedDialog.h"
 #include "CCustomizeDialog.h"
 #include "COptionsDialog.h"
 

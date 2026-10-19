@@ -714,6 +714,17 @@ LRESULT CNSCBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
     return 0;
 }
 
+static HRESULT AddItemToFavorites(HWND hWnd, IShellFolder *psf, LPCITEMIDLIST pidlLast)
+{
+    CComHeapPtr<WCHAR> pszURL, pszTitle;
+    HRESULT hr = SHELL_GetDisplayNameOf(psf, pidlLast, SHGDN_FORPARSING, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    SHELL_GetDisplayNameOf(psf, pidlLast, SHGDN_NORMAL | SHGDN_INFOLDER, &pszTitle);
+    return AddUrlToFavorites(hWnd, pszURL, pszTitle ? pszTitle : PathFindFileNameW(pszURL), FALSE /*Not silent*/);
+}
+
 HRESULT CNSCBand::_AddFavorite()
 {
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
@@ -724,18 +735,7 @@ HRESULT CNSCBand::_AddFavorite()
     HRESULT hr = SHBindToParent(pidlCurrent, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-
-    STRRET strret;
-    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    CComHeapPtr<WCHAR> pszURL;
-    hr = StrRetToStrW(&strret, NULL, &pszURL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
+    return AddItemToFavorites(m_hWnd, pParent, pidlLast);
 }
 
 LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1400,15 +1400,24 @@ STDMETHODIMP CNSCBand::HasFocusIO()
 STDMETHODIMP CNSCBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
     BOOL SkipAccelerators = m_isEditing || (!IsChild(lpMsg->hwnd) && lpMsg->hwnd != m_hWnd);
-    if (lpMsg->message == WM_KEYDOWN && lpMsg->wParam == VK_F2 && !SkipAccelerators)
+    if (lpMsg->message == WM_KEYDOWN && !SkipAccelerators)
     {
         if (HTREEITEM hItem = m_hwndTreeView.GetNextItem(NULL, TVGN_CARET))
         {
-            if (_GetAttributesOfItem(_GetItemData(hItem), SFGAO_CANRENAME))
+            CItemData *pItem = _GetItemData(hItem);
+            if (lpMsg->wParam == VK_F2 && _GetAttributesOfItem(pItem, SFGAO_CANRENAME))
             {
                 m_hwndTreeView.SetFocus();
                 m_hwndTreeView.EditLabel(hItem);
                 return S_OK;
+            }
+            if (lpMsg->wParam == VK_DELETE && _GetAttributesOfItem(pItem, SFGAO_CANDELETE))
+            {
+                CComPtr<IShellFolder> pFolder;
+                LPCITEMIDLIST pidlChild;
+                if (FAILED(SHBindToParent(pItem->absolutePidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlChild)))
+                    return S_FALSE;
+                return SHInvokeCommand(m_hWnd, pFolder, pidlChild, "delete");
             }
         }
     }

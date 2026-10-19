@@ -23,15 +23,15 @@
 class CSnapin
 {
 private:
+    UINT m_NodeId;
     CSnapinCacheEntry *m_CacheEntry;
     CAtlString m_DisplayName;
-    CAtlList<CSnapin*> m_SubNodes;
 
     void RemoveAllSubnodes();
 
 
 public:
-    CSnapin(CSnapinCacheEntry *CacheEntry, PWSTR displayName = NULL);
+    CSnapin(CSnapinCacheEntry *CacheEntry, UINT NodeId, PWSTR displayName = NULL);
     ~CSnapin();
 
     const CAtlString& Name() const;
@@ -40,8 +40,17 @@ public:
     const CAtlString& Version() const;
     const CAtlString& DisplayName() const;
 
-    CSnapinCacheEntry *GetCacheEntry();
+    void SetDisplayName(LPWSTR pszName);
+    UINT GetNodeId();
+
+    CAtlList<CSnapin*> m_SubNodes;
+
+    CSnapinCacheEntry *CacheEntry();
 
     void OnAdd(IConsole* console);
     void OnAccept(IConsole* console);
+
+    VOID SaveNode(MscFile *mscFile, IXMLDOMElement *pParentNode);
+
+    static HRESULT ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnapinNode, CSnapin **ppSnapin);
 };

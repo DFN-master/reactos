@@ -124,4 +124,14 @@ do {    \
     NtClose(FileHandle);                        \
 } while (0)
 
+UCHAR
+GetNtDevicePathOfDriveNumber(
+    _In_ USHORT DriveNumber,
+    _Out_ PUNICODE_STRING DevicePath);
+
+NTSTATUS
+SetupSetFileAttributes(
+    _In_ PCWSTR Path,
+    _In_ ULONG FileAttributes);
+
 /* EOF */

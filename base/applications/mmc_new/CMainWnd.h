@@ -18,17 +18,21 @@
 #define BTN_HELP            5
 #define BTN_ACTIONS_PANE    6
 
+#define MAX_RECENT_FILES    4
+
 class CMainWnd :
     public CWindowImpl<CMainWnd>
 {
 private:
     CWndProcThunk m_FrameThunk;
 
-    int m_nConsoleNumber;
+    int m_ConsoleNumber;
     CAtlString m_ConsoleTitle;
     HMENU m_hMenuConsoleSmall;
     HMENU m_hMenuConsoleLarge;
-    CONSOLE_MODE m_ConsoleMode;
+    DOCUMENT_MODE m_DocumentMode;
+    BOOL m_LogicalReadOnly;
+    BOOL m_PreventViewCustomization;
 
     CToolbar<DWORD_PTR> m_ToolBar;
     int m_iToolBarHeight;
@@ -40,12 +44,19 @@ private:
     HIMAGELIST m_hSnapinImageList;
 
     CAtlList<CConsoleWnd*> m_ViewList;
-    int m_NextViewId;
+    UINT m_NextViewId;
 
     CSnapin *m_RootNode;
+    UINT m_NextNodeId;
+
+    CAtlList<CRecentFileEntry *> m_RecentFilesList;
 
 public:
     CWindow m_MDIClient;
+    CAtlString m_Filename;
+
+    /* Only used for loading msc files */
+    CSimpleMap<UINT, CSnapin*> *m_TempNodeMap;
 
 public:
 
@@ -55,14 +66,28 @@ public:
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_USER_CLOSE_CHILD, OnCloseChild)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
 
         COMMAND_ID_HANDLER(IDM_FILE_NEW, OnFileNew)
+        COMMAND_ID_HANDLER(IDM_FILE_OPEN, OnFileOpen)
         COMMAND_ID_HANDLER(IDM_FILE_SAVE, OnFileSave)
         COMMAND_ID_HANDLER(IDM_FILE_SAVEAS, OnFileSaveAs)
         COMMAND_ID_HANDLER(IDM_FILE_ADD, OnFileAdd)
         COMMAND_ID_HANDLER(IDM_FILE_OPTIONS, OnFileOptions)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT1, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT2, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT3, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT4, OnFileRecent)
         COMMAND_ID_HANDLER(IDM_FILE_EXIT, OnFileExit)
 
+        COMMAND_ID_HANDLER(IDM_ACTION_NEW, OnActionNewWindow)
+        COMMAND_ID_HANDLER(IDM_ACTION_RENAME, OnActionRename)
+
+        COMMAND_ID_HANDLER(IDM_VIEW_LARGE_ICONS, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_SMALL_ICONS, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_LIST, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_DETAILS, OnViewMode)
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
 
         COMMAND_ID_HANDLER(IDM_WINDOWS_NEW, OnWindowsNew)
@@ -70,8 +95,10 @@ public:
         COMMAND_ID_HANDLER(IDM_WINDOWS_TILE, OnWindowsTile)
         COMMAND_ID_HANDLER(IDM_WINDOWS_ARRANGE, OnWindowsArrange)
 
-        COMMAND_ID_HANDLER(IDM_HELP_ABOUT, OnHelpAbout)
+        COMMAND_ID_HANDLER(IDM_HELP_ABOUT_MMC, OnHelpAboutMMC)
+        COMMAND_ID_HANDLER(IDM_HELP_ABOUT_SNAPIN, OnHelpAboutSnapin)
 
+        COMMAND_ID_HANDLER(IDM_TB_UP, OnToolbarSelectParent)
         COMMAND_ID_HANDLER(IDM_TB_SCOPE_PANE, OnToolbarScopePane)
         COMMAND_ID_HANDLER(IDM_TB_ACTIONS_PANE, OnToolbarActionsPane)
 
@@ -114,21 +141,17 @@ public:
 
 private:
 
-    void UpdateMenu()
+    void InitMain()
     {
-        if (m_ViewList.IsEmpty())
-            SetMenu(m_hMenuConsoleSmall);
-        else
-            SetMenu(m_hMenuConsoleLarge);
-    }
+        delete m_RootNode;
+        m_RootNode = NULL;
 
-    void UpdateTitle()
-    {
-        if (m_ViewList.IsEmpty())
-            m_ConsoleTitle.LoadString(IDS_APPTITLE);
-        else
-            CreateNewConsoleTitle(m_ConsoleTitle);
-        SetWindowTextW(m_ConsoleTitle.GetString());
+        m_DocumentMode = DocumentMode_Author;
+        m_LogicalReadOnly = FALSE;
+        m_PreventViewCustomization = FALSE;
+        m_bToolBarVisible = TRUE;
+        m_NextViewId = 1;
+        m_NextNodeId = 1;
     }
 
     CConsoleWnd* GetActiveChildInfo()
@@ -144,7 +167,7 @@ private:
 
     void CreateNewConsoleTitle(CAtlString& str)
     {
-        DWORD_PTR args[1] = { (DWORD_PTR)(m_nConsoleNumber) };
+        DWORD_PTR args[1] = { (DWORD_PTR)(m_ConsoleNumber) };
         str.LoadString(IDS_CONSOLETITLE);
 
         LPTSTR lpTarget = NULL;
@@ -168,27 +191,45 @@ public:
     LRESULT OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMenuSelect(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     LRESULT OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileRecent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnViewMode(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsTile(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsArrange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnHelpAboutMMC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnHelpAboutSnapin(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+    LRESULT OnToolbarSelectParent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnToolbarScopePane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnToolbarActionsPane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
+    BOOL CreateView(CSnapin *RootNode, CSnapin *SelectedNode = NULL);
     LRESULT LoadSnapinCache();
-    void UpdateLayout();
-    void UpdateViews();
+
+    VOID UpdateRecentFilesMenu();
+    VOID LoadRecentFiles();
+    VOID AddToRecentFiles(const CAtlString &FileName);
+    DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
+    LRESULT SaveMscFile(const CAtlString &FileName);
+    LRESULT LoadMscFile(const CAtlString &FileName);
+    HRESULT ParseScopeTree(MscFile *mscFile, IXMLDOMElement *pRootElement);
+    HRESULT ParseViewsElement(MscFile *mscFile, IXMLDOMElement *pRootElement);
 
 public:
     CAtlString *GetConsoleTitle();
@@ -198,13 +239,31 @@ public:
     BOOL AreStandardMenusVisible();
     VOID SetStandardMenusVisible(BOOL bVisible);
 
+    VOID UpdateAboutSnapinMenu(CSnapin *Snapin);
+    VOID UpdateViewMenu(LISTVIEW_MODE ListViewMode);
+    VOID UpdateUpToolButton(BOOL bShow);
+    VOID UpdateToolbuttons(BOOL bTreeViewVisible, BOOL bActionsPaneVisible);
+    VOID UpdateLayout();
+    VOID UpdateViews();
+    VOID UpdateMenu();
+    VOID UpdateTitle();
+
     int GetSnapinCacheCount();
     CSnapinCacheEntry *GetSnapinCacheEntry(int nIndex);
     CSnapinCacheEntry *GetSnapinCacheEntryByGuid(PWSTR pszGuid);
     HIMAGELIST SnapinImageList();
-    int RegisterView(CConsoleWnd *pView);
-    void UnregisterView(CConsoleWnd *pView);
-    CONSOLE_MODE GetConsoleMode();
-    void SetConsoleMode(CONSOLE_MODE ConsoleMode);
+
+    CSnapin *GetRootSnapin();
+
+    VOID RegisterView(CConsoleWnd *pView);
+    VOID UnregisterView(CConsoleWnd *pView);
+    UINT GetNextNodeId();
+    VOID UpdateNextNodeId(UINT NodeId);
+    DOCUMENT_MODE GetDocumentMode();
+    void SetDocumentMode(DOCUMENT_MODE DocumentMode);
+    BOOL GetLogicalReadOnly();
+    void SetLogicalReadOnly(BOOL LogicalReadOnly);
+    BOOL GetPreventViewCustomization();
+    void SetPreventViewCustomization(BOOL PreventCustomization);
 };
 

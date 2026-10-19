@@ -670,7 +670,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msadpcm",0x
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msg711",0x00000000,"msg711.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msgsm610",0x00000000,"msgsm32.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.imaadpcm",0x00000000,"imaadp32.acm"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.winemp3",0x00000000,"winemp3.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.l3acm",0x00000000,"l3codeca.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.cvid",0x00000000,"iccvid.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.mrle",0x00000000,"msrle32.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.msvc",0x00000000,"msvidc32.dll"
@@ -716,7 +716,10 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wvx",0x00000
 
 ; User Profile List
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirectory",0x00020000,"%SystemDrive%\Documents and Settings"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","Default",0x00000000,"%SystemDrive%\Users\Default"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirectory",0x00020000,"%SystemDrive%\Users"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProgramData",0x00020000,"%SystemDrive%\ProgramData"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","Public",0x00020000,"%SystemDrive%\Users\Public"
 
 ; Font substitutes
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",,0x00000012

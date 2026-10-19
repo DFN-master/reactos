@@ -134,17 +134,17 @@ typedef struct _GET_SET_CTX_CONTEXT
 //
 // Initialization Functions
 //
-VOID
-NTAPI
-PspShutdownProcessManager(
-    VOID
-);
-
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 PsInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+PsShutdownSystem(
+    VOID
 );
 
 //
@@ -307,6 +307,16 @@ NTAPI
 PspDeleteProcess(
     IN PVOID ObjectBody
 );
+
+NTSTATUS
+NTAPI
+PspThreadOpen(
+    _In_ OB_OPEN_REASON Reason,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_opt_ PEPROCESS Process,
+    _In_ PVOID ObjectBody,
+    _Inout_ PACCESS_MASK GrantedAccess,
+    _In_ ULONG HandleCount);
 
 VOID
 NTAPI
